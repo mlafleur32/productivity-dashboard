@@ -1,0 +1,623 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A27E96AD2FCDC7DF0028E286 /* NIOIMAP in Frameworks */ = {isa = PBXBuildFile; productRef = A27E96AC2FCDC7DF0028E286 /* NIOIMAP */; };
+		A27E96B02FCDC88C0028E286 /* NIOSSL in Frameworks */ = {isa = PBXBuildFile; productRef = A27E96AF2FCDC88C0028E286 /* NIOSSL */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		A2E162FD2FC8CB5F00E7F1D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A2E162E52FC8CB5E00E7F1D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A2E162EC2FC8CB5E00E7F1D2;
+			remoteInfo = ProductivityDashboard;
+		};
+		A2E163072FC8CB5F00E7F1D2 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A2E162E52FC8CB5E00E7F1D2 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A2E162EC2FC8CB5E00E7F1D2;
+			remoteInfo = ProductivityDashboard;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		A2E162ED2FC8CB5E00E7F1D2 /* ProductivityDashboard.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ProductivityDashboard.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2E162FC2FC8CB5F00E7F1D2 /* ProductivityDashboardTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProductivityDashboardTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A2E163062FC8CB5F00E7F1D2 /* ProductivityDashboardUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ProductivityDashboardUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A2E162EF2FC8CB5E00E7F1D2 /* ProductivityDashboard */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ProductivityDashboard;
+			sourceTree = "<group>";
+		};
+		A2E162FF2FC8CB5F00E7F1D2 /* ProductivityDashboardTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ProductivityDashboardTests;
+			sourceTree = "<group>";
+		};
+		A2E163092FC8CB5F00E7F1D2 /* ProductivityDashboardUITests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ProductivityDashboardUITests;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A2E162EA2FC8CB5E00E7F1D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A27E96B02FCDC88C0028E286 /* NIOSSL in Frameworks */,
+				A27E96AD2FCDC7DF0028E286 /* NIOIMAP in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E162F92FC8CB5F00E7F1D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E163032FC8CB5F00E7F1D2 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A2E162E42FC8CB5E00E7F1D2 = {
+			isa = PBXGroup;
+			children = (
+				A2E162EF2FC8CB5E00E7F1D2 /* ProductivityDashboard */,
+				A2E162FF2FC8CB5F00E7F1D2 /* ProductivityDashboardTests */,
+				A2E163092FC8CB5F00E7F1D2 /* ProductivityDashboardUITests */,
+				A2E162EE2FC8CB5E00E7F1D2 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A2E162EE2FC8CB5E00E7F1D2 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A2E162ED2FC8CB5E00E7F1D2 /* ProductivityDashboard.app */,
+				A2E162FC2FC8CB5F00E7F1D2 /* ProductivityDashboardTests.xctest */,
+				A2E163062FC8CB5F00E7F1D2 /* ProductivityDashboardUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A2E162EC2FC8CB5E00E7F1D2 /* ProductivityDashboard */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2E163102FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboard" */;
+			buildPhases = (
+				A2E162E92FC8CB5E00E7F1D2 /* Sources */,
+				A2E162EA2FC8CB5E00E7F1D2 /* Frameworks */,
+				A2E162EB2FC8CB5E00E7F1D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				A2E162EF2FC8CB5E00E7F1D2 /* ProductivityDashboard */,
+			);
+			name = ProductivityDashboard;
+			packageProductDependencies = (
+				A27E96AC2FCDC7DF0028E286 /* NIOIMAP */,
+				A27E96AF2FCDC88C0028E286 /* NIOSSL */,
+			);
+			productName = ProductivityDashboard;
+			productReference = A2E162ED2FC8CB5E00E7F1D2 /* ProductivityDashboard.app */;
+			productType = "com.apple.product-type.application";
+		};
+		A2E162FB2FC8CB5F00E7F1D2 /* ProductivityDashboardTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2E163132FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboardTests" */;
+			buildPhases = (
+				A2E162F82FC8CB5F00E7F1D2 /* Sources */,
+				A2E162F92FC8CB5F00E7F1D2 /* Frameworks */,
+				A2E162FA2FC8CB5F00E7F1D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A2E162FE2FC8CB5F00E7F1D2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A2E162FF2FC8CB5F00E7F1D2 /* ProductivityDashboardTests */,
+			);
+			name = ProductivityDashboardTests;
+			packageProductDependencies = (
+			);
+			productName = ProductivityDashboardTests;
+			productReference = A2E162FC2FC8CB5F00E7F1D2 /* ProductivityDashboardTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		A2E163052FC8CB5F00E7F1D2 /* ProductivityDashboardUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A2E163162FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboardUITests" */;
+			buildPhases = (
+				A2E163022FC8CB5F00E7F1D2 /* Sources */,
+				A2E163032FC8CB5F00E7F1D2 /* Frameworks */,
+				A2E163042FC8CB5F00E7F1D2 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A2E163082FC8CB5F00E7F1D2 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A2E163092FC8CB5F00E7F1D2 /* ProductivityDashboardUITests */,
+			);
+			name = ProductivityDashboardUITests;
+			packageProductDependencies = (
+			);
+			productName = ProductivityDashboardUITests;
+			productReference = A2E163062FC8CB5F00E7F1D2 /* ProductivityDashboardUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A2E162E52FC8CB5E00E7F1D2 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2650;
+				LastUpgradeCheck = 2650;
+				TargetAttributes = {
+					A2E162EC2FC8CB5E00E7F1D2 = {
+						CreatedOnToolsVersion = 26.5;
+					};
+					A2E162FB2FC8CB5F00E7F1D2 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = A2E162EC2FC8CB5E00E7F1D2;
+					};
+					A2E163052FC8CB5F00E7F1D2 = {
+						CreatedOnToolsVersion = 26.5;
+						TestTargetID = A2E162EC2FC8CB5E00E7F1D2;
+					};
+				};
+			};
+			buildConfigurationList = A2E162E82FC8CB5E00E7F1D2 /* Build configuration list for PBXProject "ProductivityDashboard" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A2E162E42FC8CB5E00E7F1D2;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A27E96AB2FCDC7DF0028E286 /* XCRemoteSwiftPackageReference "swift-nio-imap" */,
+				A27E96AE2FCDC88C0028E286 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A2E162EE2FC8CB5E00E7F1D2 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A2E162EC2FC8CB5E00E7F1D2 /* ProductivityDashboard */,
+				A2E162FB2FC8CB5F00E7F1D2 /* ProductivityDashboardTests */,
+				A2E163052FC8CB5F00E7F1D2 /* ProductivityDashboardUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A2E162EB2FC8CB5E00E7F1D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E162FA2FC8CB5F00E7F1D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E163042FC8CB5F00E7F1D2 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A2E162E92FC8CB5E00E7F1D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E162F82FC8CB5F00E7F1D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A2E163022FC8CB5F00E7F1D2 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A2E162FE2FC8CB5F00E7F1D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A2E162EC2FC8CB5E00E7F1D2 /* ProductivityDashboard */;
+			targetProxy = A2E162FD2FC8CB5F00E7F1D2 /* PBXContainerItemProxy */;
+		};
+		A2E163082FC8CB5F00E7F1D2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A2E162EC2FC8CB5E00E7F1D2 /* ProductivityDashboard */;
+			targetProxy = A2E163072FC8CB5F00E7F1D2 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		A2E1630E2FC8CB5F00E7F1D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A2E1630F2FC8CB5F00E7F1D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+			};
+			name = Release;
+		};
+		A2E163112FC8CB5F00E7F1D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ProductivityDashboard/ProductivityDashboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Productivity Dashboard";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Show your upcoming events on the dashboard.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Matt Lafleur.";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		A2E163122FC8CB5F00E7F1D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = ProductivityDashboard/ProductivityDashboard.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = "Productivity Dashboard";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Show your upcoming events on the dashboard.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Matt Lafleur.";
+				LD_RUNPATH_SEARCH_PATHS = "@executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboard;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		A2E163142FC8CB5F00E7F1D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboardTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ProductivityDashboard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ProductivityDashboard";
+			};
+			name = Debug;
+		};
+		A2E163152FC8CB5F00E7F1D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboardTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/ProductivityDashboard.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/ProductivityDashboard";
+			};
+			name = Release;
+		};
+		A2E163172FC8CB5F00E7F1D2 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboardUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = ProductivityDashboard;
+			};
+			name = Debug;
+		};
+		A2E163182FC8CB5F00E7F1D2 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.5;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = LuminalMachines.ProductivityDashboardUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TEST_TARGET_NAME = ProductivityDashboard;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A2E162E82FC8CB5E00E7F1D2 /* Build configuration list for PBXProject "ProductivityDashboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2E1630E2FC8CB5F00E7F1D2 /* Debug */,
+				A2E1630F2FC8CB5F00E7F1D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A2E163102FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboard" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2E163112FC8CB5F00E7F1D2 /* Debug */,
+				A2E163122FC8CB5F00E7F1D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A2E163132FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboardTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2E163142FC8CB5F00E7F1D2 /* Debug */,
+				A2E163152FC8CB5F00E7F1D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A2E163162FC8CB5F00E7F1D2 /* Build configuration list for PBXNativeTarget "ProductivityDashboardUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A2E163172FC8CB5F00E7F1D2 /* Debug */,
+				A2E163182FC8CB5F00E7F1D2 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A27E96AB2FCDC7DF0028E286 /* XCRemoteSwiftPackageReference "swift-nio-imap" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-imap.git";
+			requirement = {
+				kind = revision;
+				revision = 01de1f9a29df31f77e87c2d9248940de7233ee1e;
+			};
+		};
+		A27E96AE2FCDC88C0028E286 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-nio-ssl.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.37.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A27E96AC2FCDC7DF0028E286 /* NIOIMAP */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A27E96AB2FCDC7DF0028E286 /* XCRemoteSwiftPackageReference "swift-nio-imap" */;
+			productName = NIOIMAP;
+		};
+		A27E96AF2FCDC88C0028E286 /* NIOSSL */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A27E96AE2FCDC88C0028E286 /* XCRemoteSwiftPackageReference "swift-nio-ssl" */;
+			productName = NIOSSL;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A2E162E52FC8CB5E00E7F1D2 /* Project object */;
+}

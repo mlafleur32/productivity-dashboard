@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<!--
+  ProductivityDashboard sandbox entitlements.
+
+  Minimum-necessary principle (CLAUDE.md, Security & Privacy):
+  this file lists ONLY the OS capabilities the app strictly requires.
+  Before adding any key here, justify it against the privacy boundary
+  in CLAUDE.md ("no telemetry / no extra network calls", "the allowlist
+  gate is the spine"). Sandbox entitlements expand the app's reach
+  beyond what TCC prompts cover at runtime — keep this list small and
+  deliberate.
+
+  Current keys:
+
+  - com.apple.security.app-sandbox
+      Declares the app sandbox. Listed explicitly (rather than relying
+      on the ENABLE_APP_SANDBOX build setting alone) so this file is
+      self-contained and the sandbox state is obvious from reading
+      entitlements directly.
+
+  - com.apple.security.personal-information.calendars
+      Required for EventKit reads. Without this, EKEventStore calls
+      fail silently before reaching TCC, so the macOS permission
+      prompt never appears (this bit us once during Stage 2 setup).
+      Read-only intent is enforced in code — EventKit has no
+      read-only entitlement variant; see EventKitCalendarSource.swift.
+
+  - com.apple.security.network.client
+      Required for outgoing TCP to mail and API servers used by the app:
+        * Stage 3: imap.gmail.com:993 (IMAPS, fetch user's inbox)
+        * Stage 5: api.anthropic.com:443 (HTTPS, Claude API for analysis
+          of allowlisted mail only — the allowlist gate is enforced in
+          code; see CLAUDE.md Security & Privacy items 1–2)
+      The sandbox does not provide a host-scoped variant; this is a
+      single boolean for "may initiate outbound connections at all".
+
+  Never add — explicit constraint, do not relax without re-reading
+  CLAUDE.md Security & Privacy:
+
+  - com.apple.security.network.server
+      The app never listens for inbound connections. There is no
+      feature in CLAUDE.md (current or roadmapped) that requires this.
+      If you find yourself wanting it, stop and reconsider — it almost
+      certainly indicates a design drift away from the privacy posture.
+-->
+<dict>
+	<key>com.apple.security.app-sandbox</key>
+	<true/>
+	<key>com.apple.security.personal-information.calendars</key>
+	<true/>
+	<key>com.apple.security.network.client</key>
+	<true/>
+</dict>
+</plist>
