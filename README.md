@@ -8,7 +8,7 @@ SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **375 tests
 
 ![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
 
-**▶ [Watch the narrated demo (4½ minutes)](docs/demo.mp4)**: the assistant plans a morning, refuses a prompt injection, and shows exactly what left the Mac.
+**▶ [Watch the narrated demo (4½ minutes, MP4, 8 MB)](https://raw.githubusercontent.com/mlafleur32/productivity-dashboard/main/docs/demo.mp4)**: the assistant plans a morning, refuses a prompt injection, and shows exactly what left the Mac. *(The link downloads the video; GitHub doesn't preview files this size.)*
 
 ## In 60 seconds
 
