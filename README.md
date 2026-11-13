@@ -218,7 +218,8 @@ Demo runs send only synthetic data. The first run may ask permission to read the
 
 ## What's next
 
-- **An evaluation set for the agent instead of five live runs.** Build a corpus of injection emails, track the decline rate and the resulting plan rows, and rerun it whenever the model or prompt changes.
+- **Contain, not archive, for hostile mail.** Archive is the minimum viable response: it's reversible and confirmed, but it only removes a threat from view. The message stays searchable with live links and can be read by other AI tools later. The long-term action is one confirmed step: Junk or report phishing for scams, quarantine for injection attempts from a trusted sender (so their real mail isn't penalized), a local mark so the assistant never reads that thread again, and suspending the sender's cloud access until they're verified.
+- **An evaluation set for the agent instead of a handful of live runs.** Build a corpus of injection emails, track the decline rate and the resulting plan rows, and rerun it whenever the model or prompt changes.
 - **Real inbox trial.** Run the agent on my own inbox for a few weeks and tune the Important rules against a long stretch of real mail.
 - **Quieter tests.** Make the test host skip the real Keychain, EventKit and IMAP. This touches the security guard, so it needs its own test.
 - **Agent polish.** Streaming, retries, saved plans, and separate cost lines for the agent and email analysis in the usage pane.
