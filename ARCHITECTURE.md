@@ -656,8 +656,11 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
     agent gets busy times unless the user ticks "Share calendar event
     titles" in the Assistant section (forced on in demo mode: synthetic data).
   - **Limits (AgentLimits):** 8 model turns, 60,000 tokens per run (checked
-    before every request), 6 body reads, 12 proposals. Every billed turn is
-    recorded in CloudUsageLedger.
+    before every request), 4,096 output tokens per reply, 6 body reads,
+    12 proposals. Every billed turn is recorded in CloudUsageLedger.
+    **Per-reply cap raised 2,000 → 4,096 (Matt, 2026-11-12)** after a live
+    run hit max_tokens mid-plan and stopped. A cut-off reply still ends the
+    run; outputCapIsSentAndRoomy pins the cap.
   - **Fixed tool set:** AgentTool is a closed enum; a name outside it gets an
     error result. Tool results label sender-written text as untrusted, and a
     body sits between markers carrying a per-run random token.
@@ -672,6 +675,14 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
     It is not special-cased anywhere. A test scripts a model that obeys it
     to the letter and shows the result: two plan rows awaiting confirmation,
     nothing else.
+  - **Plan-row badges (Matt, 2026-11-12), display only:** a green lock
+    badge, "Kept on this Mac: the assistant never saw this sender or
+    subject", on proposals for local-only mail; and an orange warning badge,
+    "The assistant found instructions aimed at an AI in this email", when
+    propose_archive carries the optional `addressed_to_ai` flag. That flag
+    is the model's report, so it is honoured ONLY for an archive of a
+    shared message whose body the model read in the same run; anywhere else
+    it is ignored (injectionReportNeedsARead). No gate depends on it.
   - **A summary can't stand in for a plan.** The plan shown is only what
     the proposal tools recorded. If the model finishes with an empty plan it
     is asked once (the app's own notice) to make its proposals or confirm
@@ -680,9 +691,9 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
   - **Summary display:** the prompt asks for two or three sentences of
     plain prose (80 words at most); AgentSummaryText strips stray bullets,
     bold and heading markers for display. Presentation only, words unchanged.
-  - **Release-gate tests:** TriageAgentTests (30), against a scripted
-    transport, plus AgentSummaryTextTests. Full suite 371 passing
-    (367 unit + 4 UI).
+  - **Release-gate tests:** TriageAgentTests (32), against a scripted
+    transport, plus AgentSummaryTextTests. Full suite 373 passing
+    (369 unit + 4 UI).
   - **Known limits:** a prototype. No streaming, no retry, one run at a
     time, and the plan is not persisted. The Usage pane counts email
     analyses and Assistant turns together as "API calls".
