@@ -333,7 +333,8 @@ final class AgentWorkspace {
             // The model can only judge text it was shown: ignore the flag
             // unless this is an archive of a shared message read this run.
             reportedAddressedToAI: kind == .archive && addressedToAI
-                && row.eligible != nil && readHandles.contains(handle))
+                && row.eligible != nil && readHandles.contains(handle),
+            flaggedAsScam: row.category == .scam)
         if proposals.contains(where: { $0.id == proposal.id }) {
             return Outcome(content: "Already in the plan.", isError: false,
                            event: .rejected(tool: tool, why: .duplicate))

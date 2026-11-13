@@ -683,6 +683,9 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
     is the model's report, so it is honoured ONLY for an archive of a
     shared message whose body the model read in the same run; anywhere else
     it is ignored (injectionReportNeedsARead). No gate depends on it.
+    A third, orange "Scam or phishing: flagged by this Mac's own checks",
+    shows on any proposal whose message the LOCAL rules classify as scam;
+    never set from model output (checked in proposalsPerformNothing).
   - **A summary can't stand in for a plan.** The plan shown is only what
     the proposal tools recorded. If the model finishes with an empty plan it
     is asked once (the app's own notice) to make its proposals or confirm

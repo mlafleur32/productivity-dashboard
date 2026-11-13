@@ -398,6 +398,8 @@ struct TriageAgentTests {
         #expect(reply.message.fromAddress == Self.dana)
         #expect(reply.contentWasShared == false)
         #expect(agent.proposals[2].contentWasShared == true)
+        // The scam badge comes only from the app's own local verdict.
+        #expect(agent.proposals.map(\.flaggedAsScam) == [true, false, false, false])
     }
 
     // MARK: - 3. Only listed messages, only the fixed tools

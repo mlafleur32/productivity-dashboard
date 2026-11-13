@@ -174,6 +174,10 @@ struct AgentProposal: Identifiable, Equatable {
     /// whose body the model read in this run; display only, it changes no
     /// gate. Added 2026-11-12 (Matt) so the demo shows the report on the row.
     let reportedAddressedToAI: Bool
+    /// The app's OWN local rules classify this message as a scam (e.g. a
+    /// trusted dmarc=fail on non-list mail). Never set from anything the
+    /// model said. Display only (Matt, 2026-11-12).
+    let flaggedAsScam: Bool
 
     var id: String { "\(kind.rawValue):\(handle)" }
 }

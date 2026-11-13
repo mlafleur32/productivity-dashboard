@@ -100,7 +100,7 @@ The Assistant section sits at the top of the dashboard. You type a request or pr
 |---|---|
 | `list_recent_mail`, `read_message_body`, `list_calendar_events` | `propose_archive`, `propose_unsubscribe`, `propose_event`, `flag_for_reply` |
 
-![The Assistant after "Plan my morning": a summary that reports the injection attempt, and a plan with a lock row for mail the model never saw](docs/assistant-plan.png)
+![The Assistant after "Plan my morning": a summary that reports the injection attempt, green lock badges on mail the model never saw, an orange badge on the injection email, and a scam warning from the Mac's own checks](docs/assistant-plan.png)
 
 ### The agent can act on mail it isn't allowed to read
 
@@ -110,7 +110,7 @@ The allowlist gate covers the agent too. For mail from an allowlisted sender, th
 
 The model can still propose an action for one of those rows. The plan shows the real message, locally, with a green lock badge: *"Kept on this Mac: the assistant never saw this sender or subject."*
 
-In the screenshot above, Dana Morgan is a VIP but isn't on the allowlist. The agent flagged her message for a reply from the app's findings alone, and the plan marks it with the lock badge. Being a VIP gives the model no extra visibility.
+In the screenshot above, Dana Morgan is a VIP but isn't on the allowlist. The agent proposed an event for her message from the app's findings alone (a VIP message that mentions a date), and the plan marks it with the lock badge. Being a VIP gives the model no extra visibility.
 
 In earlier demo runs, a reminder from a dental office (not on the allowlist) reached the model as a handle that "mentions a date", and the model proposed an event. **Make Event…** opens the reviewed form with the title and time (Fri 9:30 AM) read on the Mac. The model never learned who the appointment was with.
 
@@ -135,7 +135,7 @@ That bound comes from the structure, not from the model's judgment:
 
 - **The tools read or propose, and none of them act.** The tool set is a closed enum. The agent has no reference to an archiver, an unsubscriber or a calendar writer.
 - **The model chooses a message, but never fills in an action.** A proposal carries a handle and a reason of at most 240 characters. Where an unsubscribe goes comes only from the message headers. An event's title and time come only from the date detection on the Mac and the form the user reviews.
-- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam.
+- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam. A proposal on mail the app's own rules flag as a scam carries an orange *"Scam or phishing: flagged by this Mac's own checks"* badge; that verdict comes from the Mac, never from the model.
 - **Untrusted text is fenced.** Bodies sit between markers that carry a random per-run token. Marker text inside a body is removed, so a body can't close its own wrapper.
 
 **The remaining risk:** a crafted email from an allowlisted sender can still influence which rows get proposed and what their reasons say. The control for that is the person reading the real message in the confirmation dialog.
@@ -155,7 +155,7 @@ A second live finding: one run stopped with *"The assistant got a response it co
 | Body reads per run | 6, each capped at 4,000 characters |
 | Proposals per run | 12 |
 | Output per model reply | 4,096 tokens |
-| Observed in live demo runs | 14,600–24,000 tokens over 3–4 turns, roughly 10–15¢ per run on Claude Opus 4.8 |
+| Observed in live demo runs | 14,600–31,200 tokens over 3–4 turns, roughly 10–20¢ per run on Claude Opus 4.8 |
 
 Calendar event titles had never gone to the API before the agent, so they're opt-in. By default the agent sees only busy times. Demo mode turns sharing on because its data is synthetic.
 

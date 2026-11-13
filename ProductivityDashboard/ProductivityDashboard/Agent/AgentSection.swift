@@ -224,6 +224,17 @@ private struct AgentProposalRow: View {
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
+                if proposal.flaggedAsScam {
+                    // The app's own verdict, not the model's. Display only.
+                    Label("Scam or phishing: flagged by this Mac's own checks",
+                          systemImage: "exclamationmark.shield.fill")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(0.15), in: Capsule())
+                        .padding(.top, 4)
+                }
                 if !proposal.contentWasShared {
                     // The demo's key idea, so it reads as a badge, not a
                     // footnote (Matt, 2026-11-12). Display only.
