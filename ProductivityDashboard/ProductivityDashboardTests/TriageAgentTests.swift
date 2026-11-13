@@ -806,8 +806,12 @@ struct TriageAgentTests {
         #expect(events.contains(.rejected(tool: .proposeUnsubscribe, why: .noSafeUnsubscribe)))
         // All the attack bought is two plan rows, each naming the real
         // message, each needing its own confirmation dialog.
-        #expect(agent.proposals.map(\.kind) == [.archive, .archive])
-        #expect(agent.proposals.map(\.message.fromAddress) == [Self.jordan, Self.sam])
+        let modelRows = agent.proposals.filter { !$0.addedByApp }
+        #expect(modelRows.map(\.kind) == [.archive, .archive])
+        #expect(modelRows.map(\.message.fromAddress) == [Self.jordan, Self.sam])
+        // Plus the app's own scam row, which the attack can't remove.
+        let appRows = agent.proposals.filter { $0.addedByApp }
+        #expect(appRows.map(\.message.fromAddress) == [Self.scam])
     }
 
     @Test("An injection report shows only on an archive of a shared message the model actually read")
@@ -847,10 +851,56 @@ struct TriageAgentTests {
         let agent = makeAgent(transport)
         await agent.run(request: "Plan my morning", context: fixture.context)
 
-        #expect(agent.proposals.map(\.handle) == [injected, jordan, dana, sam])
-        #expect(agent.proposals.map(\.reportedAddressedToAI) == [true, false, false, false])
+        let modelRows = agent.proposals.filter { !$0.addedByApp }
+        #expect(modelRows.map(\.handle) == [injected, jordan, dana, sam])
+        #expect(modelRows.map(\.reportedAddressedToAI) == [true, false, false, false])
+        // The app's scam row never carries the model's injection report.
+        for row in agent.proposals where row.addedByApp {
+            #expect(row.reportedAddressedToAI == false)
+        }
         // Display only: nothing was archived.
         #expect(fixture.source.archiveCalls == 0)
+    }
+
+    @Test("A local scam is always in the plan: added by the app when the model leaves it out, never twice")
+    func localScamsAreAlwaysInThePlan() async throws {
+        let fixture = await demoFixture()
+        let scam = try handle(Self.scam, in: fixture.context)
+        let jordan = try handle(Self.jordan, in: fixture.context)
+
+        // The model ignores the scam.
+        let quiet = ScriptedTransport([
+            toolTurn([listMail]),
+            toolTurn([("flag_for_reply", ["message": jordan, "reason": "Needs input"])]),
+            finalTurn("Reply to Jordan."),
+        ])
+        let agent = makeAgent(quiet)
+        await agent.run(request: "Plan my morning", context: fixture.context)
+        let added = agent.proposals.filter { $0.addedByApp }
+        #expect(added.map(\.handle) == [scam])
+        #expect(added.map(\.kind) == [.archive])
+        #expect(added.first?.flaggedAsScam == true)
+        #expect(added.first?.contentWasShared == false)
+        #expect(added.first?.reportedAddressedToAI == false)
+        // Proposing is all it does.
+        #expect(fixture.source.archiveCalls == 0)
+
+        // The model proposes it itself: one row, the model's, no app copy.
+        let own = ScriptedTransport([
+            toolTurn([listMail]),
+            toolTurn([("propose_archive", ["message": scam, "reason": "Phishing"])]),
+            finalTurn("Archive the scam."),
+        ])
+        let second = makeAgent(own)
+        await second.run(request: "Plan my morning", context: fixture.context)
+        #expect(second.proposals.filter { $0.handle == scam }.count == 1)
+        let appRows = second.proposals.filter { $0.addedByApp }
+        #expect(appRows.isEmpty)
+
+        // A run that never started adds nothing.
+        let unconfigured = makeAgent(ScriptedTransport([]), key: FakeKeyReader(key: nil))
+        await unconfigured.run(request: "Plan my morning", context: fixture.context)
+        #expect(unconfigured.proposals.isEmpty)
     }
 
     // MARK: - 8. Calendar
@@ -946,7 +996,9 @@ struct TriageAgentTests {
 
         #expect(transport.requests.count == 3)
         #expect(agent.phase == .finished(.completed))
-        #expect(agent.proposals.isEmpty)
+        // The model proposed nothing; the only row is the app's own scam row.
+        #expect(agent.proposals.filter { !$0.addedByApp }.isEmpty)
+        #expect(agent.proposals.map(\.addedByApp) == [true])
         #expect(agent.summary == "Nothing needs doing.")
         #expect(agent.log.filter { $0.event == .emptyPlanCheck }.count == 1)
     }

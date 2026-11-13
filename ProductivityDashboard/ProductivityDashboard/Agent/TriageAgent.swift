@@ -326,6 +326,14 @@ final class TriageAgent {
     }
 
     private func finish(_ stop: AgentStop, step: Int) {
+        // The app's own scam rows go in when a run ends normally (completed,
+        // or stopped at a limit). Not when it never started, was cancelled,
+        // or failed: then the user sees the error and the model's rows only.
+        if stop == .completed || stop == .stepLimit || stop == .budgetExhausted,
+           let workspace {
+            workspace.addLocalScamProposals()
+            proposals = workspace.proposals
+        }
         record(.stopped(stop), step: step)
         phase = .finished(stop)
     }

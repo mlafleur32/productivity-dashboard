@@ -178,6 +178,10 @@ struct AgentProposal: Identifiable, Equatable {
     /// trusted dmarc=fail on non-list mail). Never set from anything the
     /// model said. Display only (Matt, 2026-11-12).
     let flaggedAsScam: Bool
+    /// Added by the app itself, not proposed by the model: an archive row
+    /// for every local scam the model left out (Matt, 2026-11-12). Makes the
+    /// scam row deterministic instead of a model choice.
+    var addedByApp = false
 
     var id: String { "\(kind.rawValue):\(handle)" }
 }

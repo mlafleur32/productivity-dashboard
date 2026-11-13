@@ -4,7 +4,7 @@
 
 It sorts two inboxes and a calendar into what needs attention today. It also includes a prototype AI triage agent that can plan your morning, but it only proposes actions. You approve each one, and the agent cannot read mail you haven't cleared for the cloud.
 
-SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **373 tests** · macOS 26
+SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **374 tests** · macOS 26
 
 ![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
 
@@ -135,7 +135,7 @@ That bound comes from the structure, not from the model's judgment:
 
 - **The tools read or propose, and none of them act.** The tool set is a closed enum. The agent has no reference to an archiver, an unsubscriber or a calendar writer.
 - **The model chooses a message, but never fills in an action.** A proposal carries a handle and a reason of at most 240 characters. Where an unsubscribe goes comes only from the message headers. An event's title and time come only from the date detection on the Mac and the form the user reviews.
-- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam. A proposal on mail the app's own rules flag as a scam carries an orange *"Scam or phishing: flagged by this Mac's own checks"* badge; that verdict comes from the Mac, never from the model.
+- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam. A proposal on mail the app's own rules flag as a scam carries an orange *"Scam or phishing: flagged by this Mac's own checks"* badge; that verdict comes from the Mac, never from the model. And because the verdict is the app's, the scam row doesn't depend on the model either: if the model leaves a local scam out of its plan, the app adds the archive row itself, marked *"Added by this Mac"* (`localScamsAreAlwaysInThePlan`). A live run showed why: the model, asked only to plan a morning, once treated the scam as clutter and left it out.
 - **Untrusted text is fenced.** Bodies sit between markers that carry a random per-run token. Marker text inside a body is removed, so a body can't close its own wrapper.
 
 **The remaining risk:** a crafted email from an allowlisted sender can still influence which rows get proposed and what their reasons say. The control for that is the person reading the real message in the confirmation dialog.
@@ -163,7 +163,7 @@ Calendar event titles had never gone to the API before the agent, so they're opt
 
 ## Test strategy
 
-**373 tests**: 369 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
+**374 tests**: 370 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
 
 - **Security tests came first.** The first tests in the project guarded the places where a silent bug would breach the privacy boundary, and they're treated as release gates:
 
@@ -175,7 +175,7 @@ Calendar event titles had never gone to the API before the agent, so they're opt
   | `UnsubscribeExecutorTests` | URL safety and redirect rules, run against a fake transport and never a real socket |
   | `VIPImportanceTests` | Being a VIP never makes a sender eligible for the cloud |
   | `HeaderForensicsTests` | No raw header text gets into the findings the model sees |
-  | `TriageAgentTests` (32) | Local-only mail never reaches the API; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
+  | `TriageAgentTests` (33) | Local-only mail never reaches the API; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
   | `DemoModeTests` | Demo mode can't reach the real Keychain, IMAP, EventKit or network |
 
 - **Types first, tests second.** Each gate is a type that can only be created in one place, so code that bypasses a gate doesn't compile. The tests then check the behavior at runtime.
@@ -261,7 +261,7 @@ ProductivityDashboard/
     Storage/           SwiftData models: allowlist, VIPs, caches, action logs
     Settings/          accounts, VIPs, allowlist, API key, event suggestions
     Demo/              synthetic inbox and calendar, real-I/O guard
-  ProductivityDashboardTests/     Swift Testing suites (369 tests)
+  ProductivityDashboardTests/     Swift Testing suites (370 tests)
   ProductivityDashboardUITests/   XCUITest (4 tests, run in demo mode)
 ```
 </details>

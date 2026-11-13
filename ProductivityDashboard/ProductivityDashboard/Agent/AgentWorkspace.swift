@@ -137,6 +137,27 @@ final class AgentWorkspace {
 
     func row(forHandle handle: String) -> Row? { rowsByHandle[handle] }
 
+    /// The app's own plan rows: an archive proposal for every message the
+    /// LOCAL rules call a scam that the model didn't already propose to
+    /// archive. Nothing here comes from the model, so a scam in the inbox is
+    /// always in the plan. Not counted against maxProposals (that limit is
+    /// for the model). Display and gates are unchanged: Archive… still opens
+    /// the same confirmation dialog.
+    func addLocalScamProposals() {
+        for row in rows where row.category == .scam {
+            let id = "\(AgentProposal.Kind.archive.rawValue):\(row.handle)"
+            guard !proposals.contains(where: { $0.id == id }) else { continue }
+            var proposal = AgentProposal(
+                kind: .archive, handle: row.handle, message: row.message,
+                reason: "Added by this Mac: its own checks flag this as a scam.",
+                contentWasShared: row.eligible != nil,
+                reportedAddressedToAI: false,
+                flaggedAsScam: true)
+            proposal.addedByApp = true
+            proposals.append(proposal)
+        }
+    }
+
     // MARK: - Dispatch
 
     /// Run one tool call. Never throws and never acts: the worst a call can

@@ -686,6 +686,14 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
     A third, orange "Scam or phishing: flagged by this Mac's own checks",
     shows on any proposal whose message the LOCAL rules classify as scam;
     never set from model output (checked in proposalsPerformNothing).
+  - **Local scams are always in the plan (Matt, 2026-11-12).** When a run
+    ends normally (completed, step limit, budget), the app appends an
+    archive row, `addedByApp`, for every local-scam message the model did
+    not already propose to archive ("Added by this Mac: its own checks flag
+    this as a scam."). Deterministic, never duplicated, not counted against
+    the model's proposal limit, not added on failure or cancel. Same
+    Archive… confirmation as every other row (localScamsAreAlwaysInThePlan).
+    Added after a live "Plan my morning" run left the scam out.
   - **A summary can't stand in for a plan.** The plan shown is only what
     the proposal tools recorded. If the model finishes with an empty plan it
     is asked once (the app's own notice) to make its proposals or confirm
@@ -694,9 +702,9 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
   - **Summary display:** the prompt asks for two or three sentences of
     plain prose (80 words at most); AgentSummaryText strips stray bullets,
     bold and heading markers for display. Presentation only, words unchanged.
-  - **Release-gate tests:** TriageAgentTests (32), against a scripted
-    transport, plus AgentSummaryTextTests. Full suite 373 passing
-    (369 unit + 4 UI).
+  - **Release-gate tests:** TriageAgentTests (33), against a scripted
+    transport, plus AgentSummaryTextTests. Full suite 374 passing
+    (370 unit + 4 UI).
   - **Known limits:** a prototype. No streaming, no retry, one run at a
     time, and the plan is not persisted. The Usage pane counts email
     analyses and Assistant turns together as "API calls".
