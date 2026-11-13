@@ -225,10 +225,16 @@ private struct AgentProposalRow: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if !proposal.contentWasShared {
+                    // The demo's key idea, so it reads as a badge, not a
+                    // footnote (Matt, 2026-11-12). Display only.
                     Label("Kept on this Mac: the assistant never saw this sender or subject",
-                          systemImage: "lock")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                          systemImage: "lock.fill")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.green.opacity(0.15), in: Capsule())
+                        .padding(.top, 4)
                 }
             }
             Spacer(minLength: 8)
