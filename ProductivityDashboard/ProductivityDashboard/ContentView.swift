@@ -471,14 +471,19 @@ struct ContentView: View {
             case .noSafeMethod, .hidden:
                 return .unavailable("No safe unsubscribe option")
             }
-        case .makeEvent:
+        case .makeEvent, .reply:
+            let offersEvent = AgentPlanEventOffer.offersEvent(
+                kind: proposal.kind,
+                hasOnDeviceDate: inbox.eventHints[message.id] != nil,
+                canSuggest: inbox.canSuggestEvent(for: message))
+            guard offersEvent else {
+                return proposal.kind == .reply
+                    ? .pending(actionTitle: nil) : .unavailable("Not offered for this message")
+            }
             if openCalendarEntries.contains(where: { $0.sourceMessageID == message.id }) {
                 return .done("Event created")
             }
-            return inbox.canSuggestEvent(for: message)
-                ? .pending(actionTitle: "Make Event…") : .unavailable("Not offered for this message")
-        case .reply:
-            return .pending(actionTitle: nil)
+            return .pending(actionTitle: "Make Event…")
         }
     }
 
@@ -494,10 +499,14 @@ struct ContentView: View {
             if case .offer(let offer) = inbox.unsubscribeDecision(for: message) {
                 unsubscribeFlow.request(offer)
             }
-        case .makeEvent:
-            openSuggestedEventForm(message)
-        case .reply:
-            break
+        case .makeEvent, .reply:
+            // Same rule as the button: no button, no form.
+            if AgentPlanEventOffer.offersEvent(
+                kind: proposal.kind,
+                hasOnDeviceDate: inbox.eventHints[message.id] != nil,
+                canSuggest: inbox.canSuggestEvent(for: message)) {
+                openSuggestedEventForm(message)
+            }
         }
     }
 

@@ -4,7 +4,7 @@
 
 It sorts two inboxes and a calendar into what needs attention today. It also includes a prototype AI triage agent that can plan your morning, but it only proposes actions. You approve each one, and the agent cannot read mail you haven't cleared for the cloud.
 
-SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **374 tests** · macOS 26
+SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **375 tests** · macOS 26
 
 ![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
 
@@ -114,6 +114,8 @@ In the screenshot above, Dana Morgan is a VIP but isn't on the allowlist. The ag
 
 In earlier demo runs, a reminder from a dental office (not on the allowlist) reached the model as a handle that "mentions a date", and the model proposed an event. **Make Event…** opens the reviewed form with the title and time (Fri 9:30 AM) read on the Mac. The model never learned who the appointment was with.
 
+Whether a plan row offers **Make Event…** is the app's call, not the model's. The model sometimes labels "Dinner Saturday?" as an event and sometimes as a reply; both are fair readings. So any plan row for an email where the Mac found a date offers the event form, whatever the model called it (`planRowEventOffer`). The rule behind this and the scam row: what the app can know for certain, the app does itself; the model adds judgment on top.
+
 This is enforced by types: sender-written fields can only be rendered from a `CloudEligibleMessage`, and the function that hands the agent a body accepts nothing else.
 
 ### Watch a prompt injection fail, and why it would fail even if the model obeyed
@@ -163,7 +165,7 @@ Calendar event titles had never gone to the API before the agent, so they're opt
 
 ## Test strategy
 
-**374 tests**: 370 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
+**375 tests**: 371 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
 
 - **Security tests came first.** The first tests in the project guarded the places where a silent bug would breach the privacy boundary, and they're treated as release gates:
 
@@ -175,7 +177,7 @@ Calendar event titles had never gone to the API before the agent, so they're opt
   | `UnsubscribeExecutorTests` | URL safety and redirect rules, run against a fake transport and never a real socket |
   | `VIPImportanceTests` | Being a VIP never makes a sender eligible for the cloud |
   | `HeaderForensicsTests` | No raw header text gets into the findings the model sees |
-  | `TriageAgentTests` (33) | Local-only mail never reaches the API; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
+  | `TriageAgentTests` (34) | Local-only mail never reaches the API; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
   | `DemoModeTests` | Demo mode can't reach the real Keychain, IMAP, EventKit or network |
 
 - **Types first, tests second.** Each gate is a type that can only be created in one place, so code that bypasses a gate doesn't compile. The tests then check the behavior at runtime.
@@ -261,7 +263,7 @@ ProductivityDashboard/
     Storage/           SwiftData models: allowlist, VIPs, caches, action logs
     Settings/          accounts, VIPs, allowlist, API key, event suggestions
     Demo/              synthetic inbox and calendar, real-I/O guard
-  ProductivityDashboardTests/     Swift Testing suites (370 tests)
+  ProductivityDashboardTests/     Swift Testing suites (371 tests)
   ProductivityDashboardUITests/   XCUITest (4 tests, run in demo mode)
 ```
 </details>

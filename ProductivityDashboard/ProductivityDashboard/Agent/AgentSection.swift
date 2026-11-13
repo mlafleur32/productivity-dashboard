@@ -22,6 +22,25 @@ enum AgentProposalStatus: Equatable {
     case unavailable(String)
 }
 
+/// Whether a plan row offers "Make Event…". Decided by the APP, not by
+/// which kind of row the model chose (Matt, 2026-11-12): a "Needs a reply"
+/// row whose email has a date the on-device scan found offers the event
+/// form too, so a dated email never loses the option because the model
+/// labelled it differently between runs. The form is the same reviewed one
+/// either way; nothing about it comes from the model.
+enum AgentPlanEventOffer {
+    nonisolated static func offersEvent(kind: AgentProposal.Kind,
+                                        hasOnDeviceDate: Bool,
+                                        canSuggest: Bool) -> Bool {
+        guard canSuggest else { return false }
+        switch kind {
+        case .makeEvent: return true
+        case .reply:     return hasOnDeviceDate
+        case .archive, .unsubscribe: return false
+        }
+    }
+}
+
 struct AgentSection: View {
     let agent: TriageAgent
     let isDemo: Bool

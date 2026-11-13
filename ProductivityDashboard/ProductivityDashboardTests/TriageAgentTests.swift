@@ -903,6 +903,24 @@ struct TriageAgentTests {
         #expect(unconfigured.proposals.isEmpty)
     }
 
+    @Test("Make Event… on a plan row is the app's call: a dated reply row offers it too",
+          arguments: [
+            // kind, on-device date, canSuggest, expected
+            (AgentProposal.Kind.makeEvent, true, true, true),
+            (.makeEvent, false, true, true),     // model asked; the form opens with the date empty
+            (.reply, true, true, true),          // the Dana case: dated email, labelled "reply"
+            (.reply, false, true, false),        // no date found: a reply row stays a reply row
+            (.makeEvent, true, false, false),    // scam / suspicious / dmarc=fail: never
+            (.reply, true, false, false),
+            (.archive, true, true, false),
+            (.unsubscribe, true, true, false),
+          ])
+    func planRowEventOffer(kind: AgentProposal.Kind, hasDate: Bool,
+                           canSuggest: Bool, expected: Bool) {
+        #expect(AgentPlanEventOffer.offersEvent(kind: kind, hasOnDeviceDate: hasDate,
+                                                canSuggest: canSuggest) == expected)
+    }
+
     // MARK: - 8. Calendar
 
     @Test("Calendar titles stay on the Mac unless the user shares them")

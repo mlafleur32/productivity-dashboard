@@ -694,6 +694,12 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
     the model's proposal limit, not added on failure or cancel. Same
     Archive… confirmation as every other row (localScamsAreAlwaysInThePlan).
     Added after a live "Plan my morning" run left the scam out.
+  - **Make Event… on a plan row is the app's call (Matt, 2026-11-12).**
+    AgentPlanEventOffer: a makeEvent row offers it when the email may be
+    suggested from; a REPLY row offers it too when the on-device hint scan
+    found a date. Scam/suspicious/dmarc-fail mail never. Same reviewed form
+    (planRowEventOffer). Added after live runs labelled the same dated VIP
+    email "event" in some runs and "reply" in others.
   - **A summary can't stand in for a plan.** The plan shown is only what
     the proposal tools recorded. If the model finishes with an empty plan it
     is asked once (the app's own notice) to make its proposals or confirm
@@ -702,9 +708,9 @@ API tool-use loop and answers with a PLAN of proposals. See Agent/.
   - **Summary display:** the prompt asks for two or three sentences of
     plain prose (80 words at most); AgentSummaryText strips stray bullets,
     bold and heading markers for display. Presentation only, words unchanged.
-  - **Release-gate tests:** TriageAgentTests (33), against a scripted
-    transport, plus AgentSummaryTextTests. Full suite 374 passing
-    (370 unit + 4 UI).
+  - **Release-gate tests:** TriageAgentTests (34), against a scripted
+    transport, plus AgentSummaryTextTests. Full suite 375 passing
+    (371 unit + 4 UI).
   - **Known limits:** a prototype. No streaming, no retry, one run at a
     time, and the plan is not persisted. The Usage pane counts email
     analyses and Assistant turns together as "API calls".
