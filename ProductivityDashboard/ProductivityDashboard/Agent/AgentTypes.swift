@@ -117,7 +117,10 @@ struct AgentLimits: Equatable {
     /// Input + output tokens across the whole run. Checked before every
     /// request, so a run stops rather than starting a turn it can't afford.
     var tokenBudget = 60_000
-    var maxTokensPerTurn = 2_000
+    /// Output cap for one model reply. A reply cut off here (stop_reason
+    /// max_tokens) stops the run, so leave room for a full plan in one turn:
+    /// 2,000 was hit live once (2026-11-12). The run budget still caps cost.
+    var maxTokensPerTurn = 4_096
     var maxMessages = 20
     var maxEvents = 10
     var maxBodyReads = 6
