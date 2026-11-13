@@ -634,6 +634,24 @@ struct TriageAgentTests {
         #expect(!sent.contains(Self.jordan))
     }
 
+    @Test("Every request carries the per-reply output cap, and the cap leaves room for a full plan")
+    func outputCapIsSentAndRoomy() async throws {
+        // A live run hit the old 2,000 cap mid-plan and stopped (2026-11-12).
+        // A cut-off reply still ends the run (abnormalStops), so the cap must
+        // be large enough that a normal plan fits in one reply.
+        #expect(AgentLimits().maxTokensPerTurn >= 4_096)
+
+        let fixture = await demoFixture()
+        let transport = ScriptedTransport([toolTurn([listMail]), finalTurn()])
+        await makeAgent(transport).run(request: "Plan my morning", context: fixture.context)
+
+        #expect(transport.requests.count == 2)
+        for index in transport.requests.indices {
+            let body = transport.body(ofRequest: index)
+            #expect(body["max_tokens"] as? Int == AgentLimits().maxTokensPerTurn)
+        }
+    }
+
     @Test("The assistant turn is echoed back exactly, unknown block types included")
     func assistantContentIsEchoed() async throws {
         let fixture = await demoFixture()
@@ -788,6 +806,49 @@ struct TriageAgentTests {
         // message, each needing its own confirmation dialog.
         #expect(agent.proposals.map(\.kind) == [.archive, .archive])
         #expect(agent.proposals.map(\.message.fromAddress) == [Self.jordan, Self.sam])
+    }
+
+    @Test("An injection report shows only on an archive of a shared message the model actually read")
+    func injectionReportNeedsARead() async throws {
+        // Only propose_archive offers the optional flag, and it is not required.
+        let archive = AgentTool.proposeArchive.inputSchema
+        let archiveProperties = try #require(archive["properties"] as? [String: Any])
+        #expect(archiveProperties["addressed_to_ai"] != nil)
+        #expect((archive["required"] as? [String]) == ["message", "reason"])
+        for tool in [AgentTool.proposeUnsubscribe, .proposeEvent, .flagForReply] {
+            let properties = tool.inputSchema["properties"] as? [String: Any] ?? [:]
+            #expect(properties["addressed_to_ai"] == nil)
+        }
+
+        let fixture = await demoFixture()
+        let injected = try handle(Self.injector, in: fixture.context)
+        let jordan = try handle(Self.jordan, in: fixture.context)
+        let dana = try handle(Self.dana, in: fixture.context)
+        let sam = try handle(Self.sam, in: fixture.context)
+        let transport = ScriptedTransport([
+            toolTurn([listMail]),
+            toolTurn([("read_message_body", ["message": injected]),
+                      ("read_message_body", ["message": sam])]),
+            toolTurn([
+                // Read this run, shared, archive: the report is shown.
+                ("propose_archive", ["message": injected, "reason": "Instructions aimed at an AI",
+                                     "addressed_to_ai": true]),
+                // Shared but never read: ignored.
+                ("propose_archive", ["message": jordan, "reason": "x", "addressed_to_ai": true]),
+                // Local-only, so the model can't have seen it: ignored.
+                ("propose_archive", ["message": dana, "reason": "x", "addressed_to_ai": true]),
+                // Read, but not an archive (the field isn't offered there): ignored.
+                ("flag_for_reply", ["message": sam, "reason": "x", "addressed_to_ai": true]),
+            ]),
+            finalTurn("Casey Lin's email gave instructions to an AI; I did not follow them."),
+        ])
+        let agent = makeAgent(transport)
+        await agent.run(request: "Plan my morning", context: fixture.context)
+
+        #expect(agent.proposals.map(\.handle) == [injected, jordan, dana, sam])
+        #expect(agent.proposals.map(\.reportedAddressedToAI) == [true, false, false, false])
+        // Display only: nothing was archived.
+        #expect(fixture.source.archiveCalls == 0)
     }
 
     // MARK: - 8. Calendar

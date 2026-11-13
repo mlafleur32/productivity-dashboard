@@ -86,6 +86,8 @@ final class AgentWorkspace {
     private var rowsByHandle: [String: Row] = [:]
     private var hasListedMail = false
     private var bodyReads = 0
+    /// Handles whose body was actually sent to the model in this run.
+    private var readHandles: Set<String> = []
 
     /// - Parameter markerToken: fixed in tests; random per run otherwise.
     init(context: AgentContext, limits: AgentLimits, markerToken: String? = nil) {
@@ -155,7 +157,8 @@ final class AgentWorkspace {
             return listCalendarEvents()
         case .proposeArchive, .proposeUnsubscribe, .proposeEvent, .flagForReply:
             return propose(tool, handle: input["message"] as? String,
-                           reason: input["reason"] as? String)
+                           reason: input["reason"] as? String,
+                           addressedToAI: input["addressed_to_ai"] as? Bool ?? false)
         }
     }
 
@@ -263,6 +266,7 @@ final class AgentWorkspace {
         \(body)
         \(close)
         """
+        readHandles.insert(handle)
         return Outcome(content: content, isError: false,
                        event: .readBody(handle: handle, characters: body.count))
     }
@@ -308,7 +312,8 @@ final class AgentWorkspace {
 
     // MARK: - Proposal tools
 
-    private func propose(_ tool: AgentTool, handle: String?, reason: String?) -> Outcome {
+    private func propose(_ tool: AgentTool, handle: String?, reason: String?,
+                         addressedToAI: Bool = false) -> Outcome {
         guard let kind = tool.proposalKind else {
             return Outcome(content: "No such tool.", isError: true,
                            event: .rejected(tool: nil, why: .unknownTool))
@@ -324,7 +329,11 @@ final class AgentWorkspace {
         let proposal = AgentProposal(
             kind: kind, handle: handle, message: row.message,
             reason: AgentText.clean(reason ?? "", limit: limits.maxReasonCharacters),
-            contentWasShared: row.eligible != nil)
+            contentWasShared: row.eligible != nil,
+            // The model can only judge text it was shown: ignore the flag
+            // unless this is an archive of a shared message read this run.
+            reportedAddressedToAI: kind == .archive && addressedToAI
+                && row.eligible != nil && readHandles.contains(handle))
         if proposals.contains(where: { $0.id == proposal.id }) {
             return Outcome(content: "Already in the plan.", isError: false,
                            event: .rejected(tool: tool, why: .duplicate))

@@ -236,6 +236,18 @@ private struct AgentProposalRow: View {
                         .background(Color.green.opacity(0.15), in: Capsule())
                         .padding(.top, 4)
                 }
+                if proposal.reportedAddressedToAI {
+                    // The model's report, verified only as far as the app can:
+                    // it read this body this run (AgentWorkspace). Display only.
+                    Label("The assistant found instructions aimed at an AI in this email",
+                          systemImage: "exclamationmark.triangle.fill")
+                        .font(.callout.weight(.semibold))
+                        .foregroundStyle(.orange)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.orange.opacity(0.15), in: Capsule())
+                        .padding(.top, 4)
+                }
             }
             Spacer(minLength: 8)
             trailing
