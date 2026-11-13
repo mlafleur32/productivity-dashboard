@@ -8,6 +8,8 @@ SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **375 tests
 
 ![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
 
+**▶ [Watch the narrated demo (4½ minutes)](docs/demo.mp4)**: the assistant plans a morning, refuses a prompt injection, and shows exactly what left the Mac.
+
 ## In 60 seconds
 
 - **The problem.** Email is where an AI assistant could help most, and where letting one in is riskiest. An inbox mixes newsletters and scams with mail from a lawyer, a doctor, an accountant and family. Most assistants want all of it.
