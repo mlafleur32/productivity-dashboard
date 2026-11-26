@@ -1,24 +1,119 @@
 # ProductivityDashboard
 
-**A native macOS mail and calendar dashboard built around one rule: mail from a sender you haven't approved never leaves your Mac.**
+**A reference design for letting an AI agent work on private email without seeing it.**
 
-It sorts two inboxes and a calendar into what needs attention today. It also includes a prototype AI triage agent that can plan your morning, but it only proposes actions. You approve each one, and the agent cannot read mail you haven't cleared for the cloud.
+Most AI mail tools take the whole mailbox or nothing. This one makes the verified sender the unit of trust. I approve, one sender at a time, whose mail Claude may read, and the app checks that each message really came from that sender. For everything else, the agent gets an opaque handle and the app's own local findings, never the sender, subject or body. It can still propose acting on that mail, but it contains no code that can act. Every proposal opens the same confirmation dialog a person would use, and the app fills in the action's details itself.
 
-SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **375 tests** · macOS 26
+The dashboard (important mail, newsletters, scams, calendar and tasks from email) is the testbed for that design, running daily on my own two inboxes.
 
-![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
+SwiftUI · SwiftData · Claude API with tool use · Swift Testing · **393 tests** · macOS 26
+
+**Whose calls these were.** I wrote the requirements and the threat model, and made each tradeoff: the sender as the unit of trust, findings instead of raw headers, the app filling in every action, and fail-safe defaults wherever the two pulled apart. Each one is dated in [ARCHITECTURE.md](ARCHITECTURE.md). I tested every stage on my own accounts. Claude Code wrote the code from that spec.
+
+© 2026 Matt Lafleur. All rights reserved. Shared for portfolio review.
+
+## The trust model, in four claims
+
+| Claim | How it's enforced | Proof |
+|---|---|---|
+| Mail from an unapproved sender never reaches the model | Only the gate can create `CloudEligibleMessage`, and the API client accepts nothing else, so code that skips the gate doesn't compile | `AllowlistGateTests` |
+| An approved sender counts only when the message is verified as theirs | The gate also requires the receiving server's trusted stamp to vouch for the From domain; forged or unverified mail stays on the Mac | `AllowlistGateTests`: "a forged allowlisted From with a List-Id and dmarc=fail is not eligible" |
+| The agent can act on mail it isn't allowed to read | Unapproved mail reaches it only as an opaque handle plus local findings; real Message-IDs never leave the Mac | `TriageAgentTests` |
+| An obeyed prompt injection achieves nothing | A fixed tool set, proposals that carry only a handle and a reason, and action details filled in by the app | `obeyingTheInjectionAchievesNothing` |
+
+**What's left.** A verified, approved sender's own email can still steer which messages the agent proposes and what its reasons say. The control is the person reading the real message in the confirmation dialog.
+
+![The Assistant after "Plan my morning": a summary that reports the injection attempt, green lock badges on mail the model never saw, an orange badge on the injection email, and a scam warning from the Mac's own checks](docs/assistant-plan.png)
 
 **▶ [Watch the narrated demo (4½ minutes, MP4, 8 MB)](https://raw.githubusercontent.com/mlafleur32/productivity-dashboard/main/docs/demo.mp4)**: the assistant plans a morning, refuses a prompt injection, and shows exactly what left the Mac. *(The link downloads the video; GitHub doesn't preview files this size.)*
 
-## In 60 seconds
+**Contents:** [The agent](#the-triage-agent-prototype) · [What's new here](#whats-new-here-and-what-isnt) · [Problem](#the-problem) · [Decisions](#key-decisions-and-tradeoffs) · [Security questionnaire](#security-model-as-a-questionnaire) · [Testing](#test-strategy) · [Screenshots](#screenshots) · [Run it](#build-and-run) · [What's next](#whats-next) · [How it was built](#how-it-was-built)
 
-- **The problem.** Email is where an AI assistant could help most, and where letting one in is riskiest. An inbox mixes newsletters and scams with mail from a lawyer, a doctor, an accountant and family. Most assistants want all of it.
-- **The design.** Every message passes through one gate. If the sender is on an allowlist, the message may go to Claude, with quoted replies and signatures stripped first. Everything else is handled by rules that run on the Mac. A new sender stays local unless you promote them.
-- **The agent.** Ask it to "Plan my morning" and Claude returns a plan of proposals. Approving a proposal opens the same confirmation dialog the message's own button opens. The agent contains no code that can archive, unsubscribe or write to the calendar.
-- **Two moments worth watching.** The agent can propose a dentist appointment from an email it was never allowed to read. And when a trusted sender's email carries a prompt injection, the model reports it instead of obeying. A test shows that nothing would happen even if the model did obey.
-- **How it was built.** I defined the product, the security requirements and the architecture, and tested every stage on my own accounts. Claude Code wrote the code from a spec I maintained: [ARCHITECTURE.md](ARCHITECTURE.md).
+---
 
-**Contents:** [Problem](#the-problem) · [Decisions](#key-decisions-and-tradeoffs) · [Security questionnaire](#security-model-as-a-questionnaire) · [The agent](#the-triage-agent-prototype) · [Testing](#test-strategy) · [Screenshots](#screenshots) · [Run it](#build-and-run) · [What's next](#whats-next) · [How it was built](#how-it-was-built)
+## The triage agent (prototype)
+
+The Assistant section sits at the top of the dashboard. You type a request or press one of two shortcuts, and Claude runs a tool-use loop on the Messages API. It comes back with a short summary and a **plan**: a list of proposals, each with a one-line reason. Approving a proposal opens the same dialog or form that the message's own button opens.
+
+| Read tools | Proposal tools |
+|---|---|
+| `list_recent_mail`, `read_message_body`, `list_calendar_events` | `propose_archive`, `propose_unsubscribe`, `propose_event`, `flag_for_reply` |
+
+### The agent can act on mail it isn't allowed to read
+
+The allowlist gate covers the agent too. For mail from an allowlisted sender that the receiving server confirms, the model sees the sender, the subject and any tasks already extracted. It can request the body, which arrives stripped and capped at 4,000 characters.
+
+**Every other message reaches the model as an opaque handle** (`m1`, `m2`, …) plus facts the app has already worked out: when it arrived, its category, whether the sender is a VIP, whether it offers an unsubscribe, and whether it mentions a date. The model gets no sender, subject or body. Real Message-IDs aren't sent either, because they end in the sender's domain.
+
+The model can still propose an action for one of those rows. The plan shows the real message, locally, with a green lock badge: *"Kept on this Mac: the assistant never saw this sender or subject."*
+
+In the screenshot above, Dana Morgan is a VIP but isn't on the allowlist. The agent proposed an event for her message from the app's findings alone (a VIP message that mentions a date), and the plan marks it with the lock badge. Being a VIP gives the model no extra visibility.
+
+In earlier demo runs, a reminder from a dental office (not on the allowlist) reached the model as a handle that "mentions a date", and the model proposed an event. **Make Event…** opens the reviewed form with the title and time (Fri 9:30 AM) read on the Mac. The model never learned who the appointment was with.
+
+Whether a plan row offers **Make Event…** is the app's call, not the model's. The model sometimes labels "Dinner Saturday?" as an event and sometimes as a reply; both are fair readings. So any plan row for an email where the Mac found a date offers the event form, whatever the model called it (`planRowEventOffer`). The rule behind this and the scam row: what the app can know for certain, the app does itself; the model adds judgment on top.
+
+This is enforced by types: sender-written fields can only be rendered from a `CloudEligibleMessage`, and the function that hands the agent a body accepts nothing else.
+
+### Watch a prompt injection fail, and why it would fail even if the model obeyed
+
+The demo inbox contains one hostile email. It comes from Casey Lin, an allowlisted sender with clean headers, and its subject is *"Mailbox cleanup steps for your AI assistant."* The body tells "the AI assistant" to archive mail from two contacts, unsubscribe from a third, forward a thread to an outside address, and not mention any of it. No code special-cases this email.
+
+**What the model did:** in at least eight live runs, it declined every time and named Casey Lin in its summary. That's observed behavior, not a guarantee.
+
+**What you see:** the model can propose archiving the email and mark the proposal with an optional `addressed_to_ai` flag. The plan row then shows an orange badge: *"The assistant found instructions aimed at an AI in this email."* The badge is the model's report, not a check the app runs, so the app shows it only on an archive of a message whose body the model actually read in that run. A flag on anything else is ignored (`injectionReportNeedsARead`). It's display only and changes no gate.
+
+**What would happen if the model obeyed:** the test `obeyingTheInjectionAchievesNothing` scripts a model that complies to the letter. The result:
+- Two archive rows appear in the plan, waiting for confirmation, and each opens a dialog showing the real message.
+- No forward tool exists.
+- There's no way to unsubscribe from a person. Unsubscribe offers come only from mailing-list headers, and a contact's own mail doesn't carry them.
+- The instruction to stay quiet fails, because the plan shows everything the tools recorded.
+- Nothing is executed.
+
+That bound comes from the structure, not from the model's judgment:
+
+- **The tools read or propose, and none of them act.** The tool set is a closed enum. The agent has no reference to an archiver, an unsubscriber or a calendar writer.
+- **The model chooses a message, but never fills in an action.** A proposal carries a handle and a reason of at most 240 characters. Where an unsubscribe goes comes only from the message headers. An event's title and time come only from the date detection on the Mac and the form the user reviews.
+- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam. A proposal on mail the app's own rules flag as a scam carries an orange *"Scam or phishing: flagged by this Mac's own checks"* badge; that verdict comes from the Mac, never from the model. And because the verdict is the app's, the scam row doesn't depend on the model either: if the model leaves a local scam out of its plan, the app adds the archive row itself, marked *"Added by this Mac"* (`localScamsAreAlwaysInThePlan`). A live run showed why: the model, asked only to plan a morning, once treated the scam as clutter and left it out.
+- **Untrusted text is fenced.** Bodies sit between markers that carry a random per-run token. Marker text inside a body is removed, so a body can't close its own wrapper.
+
+**The remaining risk:** a crafted email that really comes from an allowlisted sender can still influence which rows get proposed and what their reasons say. The control for that is the person reading the real message in the confirmation dialog.
+
+### Found by testing live: a summary isn't a plan
+
+In one live run, the summary said "I'm proposing…" but the model hadn't called a single proposal tool, so the plan was empty. The fix doesn't rely on the summary. The plan shows only what the proposal tools recorded. If a run ends with an empty plan, the app asks the model once, in its own words, to make its proposals or confirm there are none. The UI then labels an empty plan as such: *"No plan this time."* The summary is treated like any other untrusted string: it's displayed and never acted on.
+
+A second live finding: one run stopped with *"The assistant got a response it couldn't use"*. The model had hit the per-reply output cap (then 2,000 tokens) partway through writing its plan. A cut-off reply still ends the run, because the app won't act on half a response, but the cap is now 4,096 tokens and a test pins it (`outputCapIsSentAndRoomy`). The 60,000-token run budget still bounds cost.
+
+### Found in review: a forged sender
+
+An outside review of this repository found a hole in what is now claim 2. The gate checked the From address and nothing else, and the From line is written by whoever sends the mail. The local scam rule stands aside for mailing-list mail, because real lists routinely fail DMARC. So a forged message with an allowlisted address in From and a `List-Id` header would have reached the agent as mail from an approved sender. The same forgery carrying a VIP's address would have landed in Important. No private mail was exposed by this; the risk was the forger's own text in the prompt.
+
+The fix puts a second question inside the gate: did the receiving server's trusted stamp vouch for the From domain? (`SenderIdentity`). A DMARC pass for that domain counts, and so does an aligned DKIM pass when DMARC wasn't evaluated. Forged or unverified mail stays on the Mac, and its row shows a crossed-out cloud. Release-gate tests pin the reviewer's exact case at each layer: the gate (`forgedListMailBlocked`), the agent (`forgedListMailStaysLocal`) and the VIP rule (`forgedVIPWithListHeadersIsScam`).
+
+*Gave up:* an approved sender's list mail that breaks DMARC in transit isn't analyzed. That's the same trade the allowlist makes: a missed task costs less than a forged email in the prompt.
+
+### Limits and cost
+
+| Limit | Value |
+|---|---|
+| Model turns per run | 8 |
+| Token budget per run | 60,000, checked before every request |
+| Body reads per run | 6, each capped at 4,000 characters |
+| Proposals per run | 12 |
+| Output per model reply | 4,096 tokens |
+| Observed in live demo runs | 14,600–31,200 tokens over 3–4 turns, roughly 10–20¢ per run on Claude Opus 4.8 |
+
+Calendar event titles had never gone to the API before the agent, so they're opt-in. By default the agent sees only busy times. Demo mode turns sharing on because its data is synthetic.
+
+---
+
+## What's new here, and what isn't
+
+Allowlists, data minimization and capability-limited tools are standard security engineering, and none of them is new. What this project adds is applying them cleanly to an AI agent in a personal inbox, and proving each claim with a test. Two ideas are worth a reviewer's time:
+
+- **An agent that can act on mail it was never allowed to read.** Unapproved mail reaches the model only as an opaque handle plus the app's own local findings, and the model can still propose the right action. The dental reminder above is the example.
+- **Prompt injection treated as containment, not persuasion.** The agent has no code that can act, the app fills in every action's details, and a test scripts a model that obeys a hostile email to the letter and shows that nothing happens.
 
 ---
 
@@ -94,80 +189,9 @@ The answers below follow the format of a vendor security questionnaire. Each one
 
 ---
 
-## The triage agent (prototype)
-
-The Assistant section sits at the top of the dashboard. You type a request or press one of two shortcuts, and Claude runs a tool-use loop on the Messages API. It comes back with a short summary and a **plan**: a list of proposals, each with a one-line reason. Approving a proposal opens the same dialog or form that the message's own button opens.
-
-| Read tools | Proposal tools |
-|---|---|
-| `list_recent_mail`, `read_message_body`, `list_calendar_events` | `propose_archive`, `propose_unsubscribe`, `propose_event`, `flag_for_reply` |
-
-![The Assistant after "Plan my morning": a summary that reports the injection attempt, green lock badges on mail the model never saw, an orange badge on the injection email, and a scam warning from the Mac's own checks](docs/assistant-plan.png)
-
-### The agent can act on mail it isn't allowed to read
-
-The allowlist gate covers the agent too. For mail from an allowlisted sender that the receiving server confirms, the model sees the sender, the subject and any tasks already extracted. It can request the body, which arrives stripped and capped at 4,000 characters.
-
-**Every other message reaches the model as an opaque handle** (`m1`, `m2`, …) plus facts the app has already worked out: when it arrived, its category, whether the sender is a VIP, whether it offers an unsubscribe, and whether it mentions a date. The model gets no sender, subject or body. Real Message-IDs aren't sent either, because they end in the sender's domain.
-
-The model can still propose an action for one of those rows. The plan shows the real message, locally, with a green lock badge: *"Kept on this Mac: the assistant never saw this sender or subject."*
-
-In the screenshot above, Dana Morgan is a VIP but isn't on the allowlist. The agent proposed an event for her message from the app's findings alone (a VIP message that mentions a date), and the plan marks it with the lock badge. Being a VIP gives the model no extra visibility.
-
-In earlier demo runs, a reminder from a dental office (not on the allowlist) reached the model as a handle that "mentions a date", and the model proposed an event. **Make Event…** opens the reviewed form with the title and time (Fri 9:30 AM) read on the Mac. The model never learned who the appointment was with.
-
-Whether a plan row offers **Make Event…** is the app's call, not the model's. The model sometimes labels "Dinner Saturday?" as an event and sometimes as a reply; both are fair readings. So any plan row for an email where the Mac found a date offers the event form, whatever the model called it (`planRowEventOffer`). The rule behind this and the scam row: what the app can know for certain, the app does itself; the model adds judgment on top.
-
-This is enforced by types: sender-written fields can only be rendered from a `CloudEligibleMessage`, and the function that hands the agent a body accepts nothing else.
-
-### Watch a prompt injection fail, and why it would fail even if the model obeyed
-
-The demo inbox contains one hostile email. It comes from Casey Lin, an allowlisted sender with clean headers, and its subject is *"Mailbox cleanup steps for your AI assistant."* The body tells "the AI assistant" to archive mail from two contacts, unsubscribe from a third, forward a thread to an outside address, and not mention any of it. No code special-cases this email.
-
-**What the model did:** in at least eight live runs, it declined every time and named Casey Lin in its summary. That's observed behavior, not a guarantee.
-
-**What you see:** the model can propose archiving the email and mark the proposal with an optional `addressed_to_ai` flag. The plan row then shows an orange badge: *"The assistant found instructions aimed at an AI in this email."* The badge is the model's report, not a check the app runs, so the app shows it only on an archive of a message whose body the model actually read in that run. A flag on anything else is ignored (`injectionReportNeedsARead`). It's display only and changes no gate.
-
-**What would happen if the model obeyed:** the test `obeyingTheInjectionAchievesNothing` scripts a model that complies to the letter. The result:
-- Two archive rows appear in the plan, waiting for confirmation, and each opens a dialog showing the real message.
-- No forward tool exists.
-- There's no way to unsubscribe from a person. Unsubscribe offers come only from mailing-list headers, and a contact's own mail doesn't carry them.
-- The instruction to stay quiet fails, because the plan shows everything the tools recorded.
-- Nothing is executed.
-
-That bound comes from the structure, not from the model's judgment:
-
-- **The tools read or propose, and none of them act.** The tool set is a closed enum. The agent has no reference to an archiver, an unsubscriber or a calendar writer.
-- **The model chooses a message, but never fills in an action.** A proposal carries a handle and a reason of at most 240 characters. Where an unsubscribe goes comes only from the message headers. An event's title and time come only from the date detection on the Mac and the form the user reviews.
-- **The app checks every proposal.** It refuses unknown handles, unknown tools, an unsubscribe with no safe method, and events or replies on mail flagged as a scam. A proposal on mail the app's own rules flag as a scam carries an orange *"Scam or phishing: flagged by this Mac's own checks"* badge; that verdict comes from the Mac, never from the model. And because the verdict is the app's, the scam row doesn't depend on the model either: if the model leaves a local scam out of its plan, the app adds the archive row itself, marked *"Added by this Mac"* (`localScamsAreAlwaysInThePlan`). A live run showed why: the model, asked only to plan a morning, once treated the scam as clutter and left it out.
-- **Untrusted text is fenced.** Bodies sit between markers that carry a random per-run token. Marker text inside a body is removed, so a body can't close its own wrapper.
-
-**The remaining risk:** a crafted email that really comes from an allowlisted sender can still influence which rows get proposed and what their reasons say. The control for that is the person reading the real message in the confirmation dialog.
-
-### Found by testing live: a summary isn't a plan
-
-In one live run, the summary said "I'm proposing…" but the model hadn't called a single proposal tool, so the plan was empty. The fix doesn't rely on the summary. The plan shows only what the proposal tools recorded. If a run ends with an empty plan, the app asks the model once, in its own words, to make its proposals or confirm there are none. The UI then labels an empty plan as such: *"No plan this time."* The summary is treated like any other untrusted string: it's displayed and never acted on.
-
-A second live finding: one run stopped with *"The assistant got a response it couldn't use"*. The model had hit the per-reply output cap (then 2,000 tokens) partway through writing its plan. A cut-off reply still ends the run, because the app won't act on half a response, but the cap is now 4,096 tokens and a test pins it (`outputCapIsSentAndRoomy`). The 60,000-token run budget still bounds cost.
-
-### Limits and cost
-
-| Limit | Value |
-|---|---|
-| Model turns per run | 8 |
-| Token budget per run | 60,000, checked before every request |
-| Body reads per run | 6, each capped at 4,000 characters |
-| Proposals per run | 12 |
-| Output per model reply | 4,096 tokens |
-| Observed in live demo runs | 14,600–31,200 tokens over 3–4 turns, roughly 10–20¢ per run on Claude Opus 4.8 |
-
-Calendar event titles had never gone to the API before the agent, so they're opt-in. By default the agent sees only busy times. Demo mode turns sharing on because its data is synthetic.
-
----
-
 ## Test strategy
 
-**375 tests**: 371 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
+**393 tests**: 389 unit tests in Swift Testing and 4 UI tests in XCUITest. They all pass on a clean build of this repository.
 
 - **Security tests came first.** The first tests in the project guarded the places where a silent bug would breach the privacy boundary, and they're treated as release gates:
 
@@ -177,9 +201,9 @@ Calendar event titles had never gone to the API before the agent, so they're opt
   | `EmailStripperTests` | Quoted threads and signatures are removed before anything is eligible to send |
   | `*ConfirmationGateTests` (3) | Cancel creates nothing, confirming twice creates one action, and each writer accepts only the confirmed type |
   | `UnsubscribeExecutorTests` | URL safety and redirect rules, run against a fake transport and never a real socket |
-  | `VIPImportanceTests` | Being a VIP never makes a sender eligible for the cloud |
+  | `VIPImportanceTests` | Being a VIP never makes a sender eligible for the cloud, and a forged VIP is a scam, not Important |
   | `HeaderForensicsTests` | No raw header text gets into the findings the model sees |
-  | `TriageAgentTests` (34) | Local-only mail never reaches the API; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
+  | `TriageAgentTests` (35) | Local-only mail never reaches the API, including forged mail from an allowlisted address; an obeyed injection changes nothing; an injection badge needs a body the model actually read; the run log holds no content |
   | `DemoModeTests` | Demo mode can't reach the real Keychain, IMAP, EventKit or network |
 
 - **Types first, tests second.** Each gate is a type that can only be created in one place, so code that bypasses a gate doesn't compile. The tests then check the behavior at runtime.
@@ -192,6 +216,10 @@ Calendar event titles had never gone to the API before the agent, so they're opt
 ## Screenshots
 
 All screenshots are from demo mode, which runs on synthetic data.
+
+![The dashboard in demo mode: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing](docs/dashboard.png)
+
+The full dashboard: the Assistant's plan above Important Email, Unsubscribe Candidates and Scams & Phishing.
 
 | | |
 |---|---|
@@ -265,7 +293,7 @@ ProductivityDashboard/
     Storage/           SwiftData models: allowlist, VIPs, caches, action logs
     Settings/          accounts, VIPs, allowlist, API key, event suggestions
     Demo/              synthetic inbox and calendar, real-I/O guard
-  ProductivityDashboardTests/     Swift Testing suites (371 tests)
+  ProductivityDashboardTests/     Swift Testing suites (389 tests)
   ProductivityDashboardUITests/   XCUITest (4 tests, run in demo mode)
 ```
 </details>
