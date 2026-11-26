@@ -76,7 +76,10 @@ struct ClaudeAnalyzerTests {
             fromName: "Alice Chen",
             fromAddress: from,
             subject: subject,
-            date: .now
+            date: .now,
+            // The gate also asks whether the message really came from that
+            // sender, so the fixture carries a passing trusted stamp.
+            authentication: AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass)
         )
         // Through the real gate — the only way to mint the type.
         return CloudAllowlist.filter([msg], using: FakeReader(eligible: [from])).first!

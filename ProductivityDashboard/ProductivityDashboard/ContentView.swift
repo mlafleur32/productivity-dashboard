@@ -903,18 +903,30 @@ private struct MessageRow: View {
                     Image(systemName: "star.fill")
                         .font(.caption)
                         .foregroundStyle(.yellow)
-                        .help("VIP sender — always shown in Important Email")
+                        .help("VIP sender — shown in Important Email when the message is confirmed as theirs")
                 }
                 Text(message.fromName ?? message.fromAddress)
                     .font(.callout).bold()
                     .lineLimit(1)
                 // Exception-only badge: local-only is the default and gets
                 // no mark; only the widened boundary is called out.
+                // isCloudEligible means the SENDER is allowlisted. Whether
+                // this MESSAGE can go is a second question (SenderIdentity,
+                // the same check CloudAllowlist.filter makes), so an
+                // allowlisted address on mail nothing vouches for gets a
+                // crossed-out cloud instead of a plain one.
                 if isCloudEligible {
-                    Image(systemName: "cloud")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .help("Cloud-eligible: mail from this sender may be sent to the Claude API for analysis")
+                    if SenderIdentity.of(message) == .verified {
+                        Image(systemName: "cloud")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .help("Cloud-eligible: mail from this sender may be sent to the Claude API for analysis")
+                    } else {
+                        Image(systemName: "icloud.slash")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .help("This sender is allowed for cloud analysis, but this message couldn't be confirmed as theirs, so it stays on this Mac")
+                    }
                 }
                 Spacer()
                 if isArchiving {

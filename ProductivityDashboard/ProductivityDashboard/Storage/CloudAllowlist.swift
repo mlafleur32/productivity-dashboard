@@ -3,8 +3,20 @@
 // THE ALLOWLIST GATE — the spine of the privacy design (ARCHITECTURE.md Security &
 // Privacy item 1). Every message destined for the Stage 5 Claude API path
 // passes through filter() exactly once. A message survives only if its
-// normalized sender is on the cloud-eligible allowlist; everything else is
+// normalized sender is on the cloud-eligible allowlist AND the receiving
+// server's trusted stamp proves it came from that sender's domain
+// (SenderIdentity, in Mail/AuthenticationResults.swift). Everything else is
 // dropped and stays local-only. This is the fail-safe default: unknown ⇒ out.
+//
+// Why both questions (2026-11-23, from an outside review): the From line is
+// written by whoever sends the message. Without the identity check, anyone
+// could put an allowlisted address in From, add a List-Id header so the
+// local scam rule stood aside, and have their text read into the prompt as
+// mail from someone the user trusts. Allowlisted mail that can't be
+// verified (no trusted stamp, dmarc=none with no aligned DKIM pass, a list
+// that broke DMARC in transit) now stays local. That's the same trade the
+// allowlist already makes: a missed task costs less than a forged email in
+// the prompt.
 //
 // Type-safe enforcement, not just a runtime check: CloudEligibleMessage has a
 // fileprivate init, so the ONLY code in the entire app that can construct one
@@ -37,11 +49,13 @@ protocol AllowlistReading: Sendable {
 }
 
 enum CloudAllowlist {
-    /// The gate. Keeps only messages whose sender is explicitly cloud-eligible.
+    /// The gate. Keeps only messages whose sender is explicitly cloud-eligible
+    /// and whose identity the receiving server verified.
     ///
     /// Fail-safe by construction: `eligible` is a finite allowlist, and a
-    /// message is kept only on a positive membership hit. An empty allowlist,
-    /// an unrecognized sender, or a reader that failed to load (returns [])
+    /// message is kept only on a positive membership hit plus a positive
+    /// identity check. An empty allowlist, an unrecognized sender, a reader
+    /// that failed to load (returns []), or a From line nothing vouches for
     /// all yield zero eligible messages — the privacy-safe outcome.
     static func filter(
         _ messages: [MailMessage],
@@ -51,6 +65,7 @@ enum CloudAllowlist {
         return messages.compactMap { message in
             let key = AllowedSender.normalize(message.fromAddress)
             guard eligible.contains(key) else { return nil }
+            guard SenderIdentity.of(message) == .verified else { return nil }
             return CloudEligibleMessage(message)
         }
     }

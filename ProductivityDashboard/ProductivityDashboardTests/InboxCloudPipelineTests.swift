@@ -89,9 +89,19 @@ struct InboxCloudPipelineTests {
     // MARK: - Fixtures
 
     /// A message the local rules classify .other (no list headers, no bulk
-    /// local part, no trusted auth verdict) — the only category the cloud
-    /// pipeline may touch.
+    /// local part, a passing trusted auth verdict) — the only category the
+    /// cloud pipeline may touch. The passing verdict is what lets an
+    /// allowlisted sender's message through the gate's identity check.
     private func ambiguousMessage(id: String, from: String, uid: UInt32) -> MailMessage {
+        MailMessage(id: id, fromName: nil, fromAddress: from,
+                    subject: "s", date: .now,
+                    authentication: AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass),
+                    imapUID: uid)
+    }
+
+    /// Looks like ambiguousMessage, but nothing vouches for the From line
+    /// (no trusted stamp at all).
+    private func unverifiedMessage(id: String, from: String, uid: UInt32) -> MailMessage {
         MailMessage(id: id, fromName: nil, fromAddress: from,
                     subject: "s", date: .now, imapUID: uid)
     }
@@ -138,6 +148,24 @@ struct InboxCloudPipelineTests {
 
         #expect(analyzer.analyzedMessageIDs == ["m-allowed"])
         #expect(source.fetchedBodyUIDs == [11])  // stranger's body never even fetched
+    }
+
+    @Test("RELEASE GATE: an allowlisted address on mail nothing vouches for is never analyzed")
+    func unverifiedAllowlistedSenderStaysLocal() async {
+        let source = FakeMailSource()
+        source.messages = [
+            ambiguousMessage(id: "m-verified", from: "alice@firm.example", uid: 41),
+            unverifiedMessage(id: "m-unverified", from: "alice@firm.example", uid: 42),
+        ]
+        source.bodies = [41: "please review", 42: "should never be fetched"]
+        let analyzer = SpyAnalyzer()
+        let vm = makeVM(source: source, analyzer: analyzer, cache: InMemoryCloudCache(),
+                        eligible: ["alice@firm.example"])
+
+        await vm.load()
+
+        #expect(analyzer.analyzedMessageIDs == ["m-verified"])
+        #expect(source.fetchedBodyUIDs == [41])  // the unverified body is never even fetched
     }
 
     @Test("RELEASE GATE: being a VIP grants NO cloud eligibility")

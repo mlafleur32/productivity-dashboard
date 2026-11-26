@@ -51,6 +51,14 @@ struct AuthenticationResults: Sendable, Hashable {
     let spf: AuthVerdict
     let dkim: AuthVerdict
     let dmarc: AuthVerdict
+    /// The domain the receiving server evaluated DMARC for (`header.from=`
+    /// on the dmarc result), lowercased. nil when the stamp didn't say.
+    var dmarcHeaderFrom: String? = nil
+    /// Every domain with a dkim=pass result in the trusted stamp, taken from
+    /// `header.d=` or, failing that, the domain part of `header.i=` (Gmail
+    /// writes `header.i=@example.com`). Lowercased. A message can carry
+    /// several signatures, so this keeps all of them, not only the last.
+    var dkimPassDomains: [String] = []
 
     /// Parse the trusted Authentication-Results verdict, or nil if no header
     /// stamped by the expected receiving server is present.
@@ -104,6 +112,8 @@ struct AuthenticationResults: Sendable, Hashable {
         var spf: AuthVerdict = .notPerformed
         var dkim: AuthVerdict = .notPerformed
         var dmarc: AuthVerdict = .notPerformed
+        var dmarcHeaderFrom: String?
+        var dkimPassDomains: [String] = []
 
         // Drop the authserv-id (+ optional version): everything after the
         // first ";" is the list of "method=result ..." clauses.
@@ -114,24 +124,135 @@ struct AuthenticationResults: Sendable, Hashable {
 
         for clause in parts.dropFirst() {
             let trimmed = clause.trimmingCharacters(in: .whitespaces)
-            // A clause is "method=result key=value key=value". We only need
-            // the leading "method=result".
+            // A clause is "method=result key=value key=value". The leading
+            // "method=result" gives the verdict; the properties after it say
+            // which domain the verdict is about.
             guard let eq = trimmed.firstIndex(of: "=") else { continue }
             let method = trimmed[..<eq].trimmingCharacters(in: .whitespaces).lowercased()
             let afterEq = trimmed[trimmed.index(after: eq)...]
             // result is the token up to whitespace or "(" (a comment).
             let result = afterEq.prefix { $0 != " " && $0 != "(" && $0 != "\t" }
             let verdict = AuthVerdict.parse(String(result))
+            let properties = Self.properties(in: String(afterEq.dropFirst(result.count)))
 
             switch method {
-            case "spf":   spf = verdict
-            case "dkim":  dkim = verdict
-            case "dmarc": dmarc = verdict
-            default:      break   // auth, arc, etc. — not used by our rules
+            case "spf":
+                spf = verdict
+            case "dkim":
+                dkim = verdict
+                if verdict == .pass, let domain = Self.signingDomain(properties) {
+                    dkimPassDomains.append(domain)
+                }
+            case "dmarc":
+                dmarc = verdict
+                dmarcHeaderFrom = properties["header.from"].map(Self.bareDomain)
+            default:
+                break   // auth, arc, etc. — not used by our rules
             }
         }
 
-        return AuthenticationResults(spf: spf, dkim: dkim, dmarc: dmarc)
+        return AuthenticationResults(spf: spf, dkim: dkim, dmarc: dmarc,
+                                     dmarcHeaderFrom: dmarcHeaderFrom,
+                                     dkimPassDomains: dkimPassDomains)
+    }
+
+    /// "ptype.property=value" pairs after a result, keys lowercased.
+    /// Parenthesised comments are dropped first: they're free text, and on
+    /// some servers they quote sender-chosen names.
+    private static func properties(in text: String) -> [String: String] {
+        var withoutComments = ""
+        var depth = 0
+        for ch in text {
+            if ch == "(" { depth += 1; continue }
+            if ch == ")" { depth = max(0, depth - 1); continue }
+            if depth == 0 { withoutComments.append(ch) }
+        }
+        var out: [String: String] = [:]
+        for token in withoutComments.split(whereSeparator: { $0 == " " || $0 == "\t" }) {
+            guard let eq = token.firstIndex(of: "=") else { continue }
+            let key = token[..<eq].lowercased()
+            let value = String(token[token.index(after: eq)...])
+            // First one wins: a later repeat of the same key is not the
+            // server's own word about this result.
+            if out[key] == nil, !value.isEmpty { out[key] = value }
+        }
+        return out
+    }
+
+    /// The signing domain of a dkim result: header.d, else header.i's domain.
+    private static func signingDomain(_ properties: [String: String]) -> String? {
+        if let d = properties["header.d"] { return bareDomain(d) }
+        if let i = properties["header.i"], i.contains("@") { return bareDomain(i) }
+        return nil
+    }
+
+    /// "@Example.com", "user@example.com" or "example.com." → "example.com".
+    private static func bareDomain(_ raw: String) -> String {
+        var s = raw.trimmingCharacters(in: CharacterSet(charactersIn: "\"' \t"))
+        if let at = s.lastIndex(of: "@") { s = String(s[s.index(after: at)...]) }
+        while s.hasSuffix(".") { s.removeLast() }
+        return s.lowercased()
+    }
+}
+
+// MARK: - Sender identity (the cloud gate's second question)
+
+/// Whether the receiving server's trusted stamp proves that a message came
+/// from the domain in its From address. The allowlist answers "may this
+/// sender's mail reach the cloud?"; this answers "is it really them?". The
+/// gate needs both, because the From line is written by whoever sends the
+/// message (outside review, 2026-11-23: a forged allowlisted From plus a
+/// List-Id header used to reach the agent as trusted mail).
+enum SenderIdentity: Sendable, Hashable {
+    /// DMARC passed for the From domain, or a DKIM signature from the From
+    /// domain (or a parent/child of it) passed.
+    case verified
+    /// No trusted stamp, or nothing in it ties the message to the From
+    /// domain (dmarc=none and no aligned DKIM pass, an unknown provider…).
+    /// Not an accusation: it just can't count as the allowlisted sender.
+    case unverified
+    /// The trusted stamp says DMARC failed: the From domain's own policy
+    /// says this message isn't theirs.
+    case forged
+
+    static func of(_ message: MailMessage) -> SenderIdentity {
+        guard let auth = message.authentication else { return .unverified }
+        if auth.dmarc == .fail { return .forged }
+        guard let fromDomain = domain(of: message.fromAddress) else { return .unverified }
+
+        if auth.dmarc == .pass {
+            // Gmail names the domain it checked. If that isn't the address
+            // we show, the pass is about some other From line. A stamp that
+            // names no domain is taken as being about this message's From.
+            if let checked = auth.dmarcHeaderFrom, checked != fromDomain {
+                return .unverified
+            }
+            return .verified
+        }
+        if auth.dkimPassDomains.contains(where: { aligned($0, fromDomain) }) {
+            return .verified
+        }
+        return .unverified
+    }
+
+    /// Lowercased domain of an address, or nil if there isn't one.
+    static func domain(of address: String) -> String? {
+        let trimmed = address.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let at = trimmed.lastIndex(of: "@") else { return nil }
+        let domain = trimmed[trimmed.index(after: at)...].lowercased()
+        return domain.isEmpty ? nil : domain
+    }
+
+    /// Same domain, or one is a subdomain of the other. Deliberately
+    /// stricter than HeaderForensics.sameOrganization, which compares the
+    /// last two labels and so would treat evil.co.uk and bank.co.uk as one
+    /// organization. Nobody can get a passing signature for a subdomain of
+    /// a domain they don't control, so this can't be gamed that way.
+    static func aligned(_ signer: String, _ fromDomain: String) -> Bool {
+        let a = signer.lowercased(), b = fromDomain.lowercased()
+        // A bare top-level label ("com") never counts as a signer.
+        guard a.contains("."), !a.hasPrefix("."), !b.isEmpty else { return false }
+        return a == b || a.hasSuffix("." + b) || b.hasSuffix("." + a)
     }
 }
 

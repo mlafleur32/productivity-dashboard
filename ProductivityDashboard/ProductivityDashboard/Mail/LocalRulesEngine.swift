@@ -38,10 +38,37 @@ enum LocalRulesEngine {
     /// out of Unsubscribe Candidates, where acting on a forwarded
     /// List-Unsubscribe header would unsubscribe from the original
     /// sender's list, not theirs.
+    ///
+    /// Since 2026-11-23 (outside review), the VIP promotion also asks whether
+    /// the message really came from that VIP. A From line naming a VIP is
+    /// written by the sender, so on its own it proves nothing. See vipOverlay.
     static func classify(_ message: MailMessage, vipSenders: Set<String>) -> MailCategory {
-        if isLikelyScam(message) { return .scam }
-        if isVIP(message, vipSenders: vipSenders) { return .important }
-        return classify(message)
+        vipOverlay(classify(message), message: message, vipSenders: vipSenders)
+    }
+
+    /// Applies the VIP list on top of a base category. Shared by
+    /// classify(_:vipSenders:) and InboxViewModel.categorize so the two
+    /// paths can't drift.
+    ///
+    /// - .scam stays .scam (a VIP can never talk the app out of a spoof warning).
+    /// - A VIP From the receiving server verified becomes .important.
+    /// - A VIP From the receiving server says is forged (trusted dmarc=fail)
+    ///   becomes .scam, even with list headers: impersonating someone the
+    ///   user marked VIP is the attack, and a List-Id is the cheapest header
+    ///   to add.
+    /// - A VIP From nothing vouches for keeps its base category. It isn't
+    ///   promoted, so a forger can't buy a place in Important.
+    static func vipOverlay(
+        _ category: MailCategory,
+        message: MailMessage,
+        vipSenders: Set<String>
+    ) -> MailCategory {
+        guard category != .scam, isVIP(message, vipSenders: vipSenders) else { return category }
+        switch SenderIdentity.of(message) {
+        case .verified: return .important
+        case .forged: return .scam
+        case .unverified: return category
+        }
     }
 
     static func isVIP(_ m: MailMessage, vipSenders: Set<String>) -> Bool {

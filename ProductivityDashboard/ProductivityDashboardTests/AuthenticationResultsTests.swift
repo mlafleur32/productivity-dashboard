@@ -111,6 +111,39 @@ struct AuthenticationResultsTests {
         #expect(AuthservIDMap.expectedAuthservID(forServer: "imap.gmail.com") == "mx.google.com")
         #expect(AuthservIDMap.expectedAuthservID(forServer: "imap.fastmail.com") == nil)
     }
+
+    // MARK: - Which domain each verdict is about (2026-11-23)
+
+    @Test("Records the domain DMARC was checked for")
+    func recordsDMARCHeaderFrom() {
+        let value = "mx.google.com; dmarc=pass (p=REJECT sp=REJECT dis=NONE) header.from=Example.com"
+        let result = AuthenticationResults.parse(headerValues: [value], expectedAuthservID: gmail)
+        #expect(result?.dmarcHeaderFrom == "example.com")
+    }
+
+    @Test("Records DKIM pass domains from header.d or header.i")
+    func recordsDKIMPassDomains() {
+        let value = "mx.google.com; dkim=pass header.i=@news.example.com header.s=s1; " +
+                    "dkim=pass header.d=Mailer.example header.s=k2; " +
+                    "dkim=fail header.d=broken.example; spf=pass; dmarc=pass header.from=example.com"
+        let result = AuthenticationResults.parse(headerValues: [value], expectedAuthservID: gmail)
+        #expect(result?.dkimPassDomains == ["news.example.com", "mailer.example"])
+    }
+
+    @Test("Text inside a comment is never read as a property")
+    func commentsAreIgnored() {
+        let value = "mx.google.com; dmarc=pass (header.from=evil.example) header.from=good.example"
+        let result = AuthenticationResults.parse(headerValues: [value], expectedAuthservID: gmail)
+        #expect(result?.dmarcHeaderFrom == "good.example")
+    }
+
+    @Test("A stamp that names no domain leaves the new fields empty")
+    func noPropertiesLeavesFieldsEmpty() {
+        let value = "mx.google.com; spf=pass; dkim=pass; dmarc=pass"
+        let result = AuthenticationResults.parse(headerValues: [value], expectedAuthservID: gmail)
+        #expect(result?.dmarcHeaderFrom == nil)
+        #expect(result?.dkimPassDomains.isEmpty == true)
+    }
 }
 
 // MARK: - Stage 9: EarthLink / Mindspring (verified from a real header)
@@ -153,6 +186,15 @@ struct EarthLinkAuthservIDTests {
         #expect(result.spf == .pass)
         #expect(result.dkim == .pass)
         #expect(result.dmarc == .pass)
+    }
+
+    @Test("The real EarthLink header names the domains it checked")
+    func realHeaderNamesDomains() throws {
+        let result = try #require(AuthenticationResults.parse(
+            headerValues: [Self.earthlinkHeader],
+            expectedAuthservID: "earthlink-vadesecure.net"))
+        #expect(result.dmarcHeaderFrom == "shop.example")
+        #expect(result.dkimPassDomains == ["shop.example"])
     }
 
     @Test("RELEASE GATE: a stamp from any other authserv-id is not trusted")

@@ -696,10 +696,9 @@ final class InboxViewModel {
             // VIP is a fact about the sender that the user can change at
             // any time. Overlaying keeps edits to the VIP list immediate
             // and leaves no stale .important rows behind in storage.
-            // Scam wins over VIP — see LocalRulesEngine.classify(_:vipSenders:).
-            let final: MailCategory = (category != .scam
-                                       && LocalRulesEngine.isVIP(message, vipSenders: vips))
-                ? .important : category
+            // Scam wins over VIP, and a VIP From is promoted only when the
+            // receiving server verified it — see LocalRulesEngine.vipOverlay.
+            let final = LocalRulesEngine.vipOverlay(category, message: message, vipSenders: vips)
             return CategorizedMessage(message: message, category: final)
         }
     }

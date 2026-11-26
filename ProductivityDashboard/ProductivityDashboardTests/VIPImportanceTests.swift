@@ -61,6 +61,30 @@ struct VIPRulesTests {
         #expect(LocalRulesEngine.classify(forwarded, vipSenders: Self.vips) == .important)
     }
 
+    @Test("RELEASE GATE: a forged VIP with list headers is a scam, not Important")
+    func forgedVIPWithListHeadersIsScam() {
+        // The local scam rule stands aside for list mail. A VIP's name on a
+        // forged message must not ride that exception into Important.
+        let forged = message(from: "dad@family.example", dmarc: .fail,
+                             listUnsubscribe: "<https://u.example/x>")
+        #expect(LocalRulesEngine.classify(forged, vipSenders: Self.vips) == .scam)
+    }
+
+    @Test("A VIP From that nothing vouches for isn't promoted to Important")
+    func unverifiedVIPIsNotImportant() {
+        let bare = MailMessage(id: "m-bare", fromName: "Someone",
+                               fromAddress: "dad@family.example",
+                               subject: "Hello", date: .now, imapUID: 1)
+        #expect(LocalRulesEngine.classify(bare, vipSenders: Self.vips) == .other)
+        let dmarcNone = MailMessage(id: "m-none", fromName: "Someone",
+                                    fromAddress: "dad@family.example",
+                                    subject: "Hello", date: .now,
+                                    authentication: AuthenticationResults(spf: .pass, dkim: .notPerformed,
+                                                                          dmarc: .notPerformed),
+                                    imapUID: 1)
+        #expect(LocalRulesEngine.classify(dmarcNone, vipSenders: Self.vips) == .other)
+    }
+
     @Test("An empty VIP list changes nothing")
     func emptyListIsInert() {
         #expect(LocalRulesEngine.classify(message(from: "dad@family.example"),
@@ -117,6 +141,18 @@ struct InboxVIPTests {
         #expect(vm.important.map(\.id) == ["a"])
         #expect(vm.isVIP(vm.important[0]))
         #expect(vm.cloudVerdicts.isEmpty)
+    }
+
+    @Test("RELEASE GATE: in the inbox, a forged VIP with a List-Id lands in Scams, not Important")
+    func inboxForgedVIPIsScam() async {
+        let forged = MailMessage(id: "f", fromName: "Dad", fromAddress: "dad@family.example",
+                                 subject: "Quick favor", date: .now,
+                                 listId: "<promo.lists.evil.example>",
+                                 authentication: AuthenticationResults(spf: .fail, dkim: .fail, dmarc: .fail),
+                                 imapUID: 4)
+        let vm = await loaded([forged], vips: ["dad@family.example"])
+        #expect(vm.important.isEmpty)
+        #expect(vm.scams.map(\.id) == ["f"])
     }
 
     @Test("No VIPs → Important Email behaves exactly as before")

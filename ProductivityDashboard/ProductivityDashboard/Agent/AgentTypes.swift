@@ -286,7 +286,7 @@ struct AgentLogEntry: Identifiable, Equatable {
         case .refusedBody(let handle, let why):
             switch why {
             case .notAllowlisted:
-                return "Refused to share the body of \(name(handle)): sender is not on the Cloud Allowlist"
+                return "Refused to share the body of \(name(handle)): sender is not on the Cloud Allowlist, or couldn't be confirmed as the real sender"
             case .flaggedAsScam:
                 return "Refused to share the body of \(name(handle)): flagged as a scam"
             case .noReadableText:

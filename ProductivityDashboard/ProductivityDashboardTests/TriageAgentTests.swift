@@ -350,6 +350,37 @@ struct TriageAgentTests {
         #expect(agent.log.contains { $0.event == .refusedBody(handle: scam, why: .flaggedAsScam) })
     }
 
+    @Test("RELEASE GATE: a forged allowlisted From with a List-Id gets only a handle")
+    func forgedListMailStaysLocal() async throws {
+        // The local scam rule stands aside for list mail, so this message is
+        // categorized .newsletter, not .scam. The gate's identity check is
+        // what keeps the forger's text away from the model.
+        let sender = "alice@firm.example"
+        let forged = MailMessage(id: "<forged@evil.example>", fromName: "Alice Chen",
+                                 fromAddress: sender, subject: "Forged subject line",
+                                 date: .now, listId: "<announce.lists.evil.example>",
+                                 authentication: AuthenticationResults(spf: .fail, dkim: .fail,
+                                                                       dmarc: .fail),
+                                 imapUID: 9)
+        let context = AgentContext(
+            messages: [CategorizedMessage(message: forged, category: .newsletter)],
+            allowlist: FakeAllowlist(eligible: [sender]),
+            fetchBody: { _ in "Forged body text" })
+        let workspace = AgentWorkspace(context: context, limits: AgentLimits(), markerToken: "t0ken")
+        let row = try #require(workspace.rows.first)
+        #expect(row.eligible == nil)
+
+        let listed = await workspace.execute(toolName: "list_recent_mail", input: [:])
+        #expect(!listed.content.contains(sender))
+        #expect(!listed.content.contains("Forged subject line"))
+        #expect(listed.event == .listedMail(shared: 0, keptLocal: 1))
+
+        let read = await workspace.execute(toolName: "read_message_body",
+                                           input: ["message": row.handle])
+        #expect(read.isError)
+        #expect(!read.content.contains("Forged body text"))
+    }
+
     @Test("An empty allowlist shares nothing at all")
     func emptyAllowlistSharesNothing() async throws {
         let fixture = await demoFixture(allowlist: [])
@@ -682,7 +713,9 @@ struct TriageAgentTests {
         -> (AgentWorkspace, String) {
         let sender = "alice@firm.example"
         let message = MailMessage(id: "<one@firm.example>", fromName: "Alice Chen",
-                                  fromAddress: sender, subject: "Notes", date: .now, imapUID: 7)
+                                  fromAddress: sender, subject: "Notes", date: .now,
+                                  authentication: AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass),
+                                  imapUID: 7)
         let context = AgentContext(
             messages: [CategorizedMessage(message: message, category: .other)],
             allowlist: FakeAllowlist(eligible: [sender]),

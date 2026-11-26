@@ -23,13 +23,23 @@ struct AllowlistGateTests {
         func cloudEligibleSenders() -> Set<String> { eligible }
     }
 
-    private func message(from address: String) -> MailMessage {
+    /// A trusted stamp that vouches for the From line, so the tests about
+    /// the allowlist itself aren't also tests about identity.
+    private static let passing = AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass)
+
+    private func message(
+        from address: String,
+        authentication: AuthenticationResults? = AllowlistGateTests.passing,
+        listId: String? = nil
+    ) -> MailMessage {
         MailMessage(
             id: UUID().uuidString,
             fromName: nil,
             fromAddress: address,
             subject: "irrelevant",
-            date: .now
+            date: .now,
+            listId: listId,
+            authentication: authentication
         )
     }
 
@@ -96,5 +106,91 @@ struct AllowlistGateTests {
             using: reader
         )
         #expect(result.isEmpty)
+    }
+
+    // MARK: - The From line has to be theirs (2026-11-23, outside review)
+    //
+    // The From line is written by whoever sends the mail. These tests prove
+    // that naming an allowlisted address isn't enough: the receiving
+    // server's trusted stamp has to say the message came from that domain.
+
+    @Test("RELEASE GATE: a forged allowlisted From with a List-Id and dmarc=fail is not eligible")
+    func forgedListMailBlocked() {
+        // The exact attack from the review: the List-Id makes the local scam
+        // rule stand aside, so the gate itself has to catch it.
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let forged = message(
+            from: "known@firm.example",
+            authentication: AuthenticationResults(spf: .fail, dkim: .fail, dmarc: .fail,
+                                                  dmarcHeaderFrom: "firm.example"),
+            listId: "<announce.lists.evil.example>")
+        #expect(CloudAllowlist.filter([forged], using: reader).isEmpty)
+    }
+
+    @Test("RELEASE GATE: no trusted stamp means not eligible, even for an allowlisted address")
+    func noTrustedStampBlocked() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let bare = message(from: "known@firm.example", authentication: nil)
+        #expect(CloudAllowlist.filter([bare], using: reader).isEmpty)
+    }
+
+    @Test("dmarc=none with no DKIM pass is not eligible")
+    func dmarcNoneWithoutDKIMBlocked() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let m = message(from: "known@firm.example",
+                        authentication: AuthenticationResults(spf: .pass, dkim: .notPerformed,
+                                                              dmarc: .notPerformed))
+        #expect(CloudAllowlist.filter([m], using: reader).isEmpty)
+    }
+
+    @Test("dmarc=none with a DKIM pass by the From domain is eligible")
+    func dmarcNoneWithAlignedDKIMPasses() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let m = message(from: "known@firm.example",
+                        authentication: AuthenticationResults(spf: .pass, dkim: .pass,
+                                                              dmarc: .notPerformed,
+                                                              dkimPassDomains: ["mail.firm.example"]))
+        #expect(CloudAllowlist.filter([m], using: reader).count == 1)
+    }
+
+    @Test("A DKIM pass by some other domain doesn't vouch for the From line")
+    func unalignedDKIMBlocked() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let m = message(from: "known@firm.example",
+                        authentication: AuthenticationResults(spf: .pass, dkim: .pass,
+                                                              dmarc: .notPerformed,
+                                                              dkimPassDomains: ["bulkmailer.example"]))
+        #expect(CloudAllowlist.filter([m], using: reader).isEmpty)
+    }
+
+    @Test("A dmarc=pass about another domain doesn't vouch for this From line")
+    func dmarcPassForOtherDomainBlocked() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let m = message(from: "known@firm.example",
+                        authentication: AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass,
+                                                              dmarcHeaderFrom: "evil.example"))
+        #expect(CloudAllowlist.filter([m], using: reader).isEmpty)
+    }
+
+    @Test("A dmarc=pass naming the From domain is eligible")
+    func dmarcPassForThisDomainPasses() {
+        let reader = FakeReader(eligible: ["known@firm.example"])
+        let m = message(from: "Known@Firm.Example",
+                        authentication: AuthenticationResults(spf: .pass, dkim: .pass, dmarc: .pass,
+                                                              dmarcHeaderFrom: "firm.example"))
+        #expect(CloudAllowlist.filter([m], using: reader).count == 1)
+    }
+
+    @Test("Alignment is by whole domain labels, not by the last two labels")
+    func alignmentIsStrict() {
+        #expect(SenderIdentity.aligned("firm.example", "firm.example"))
+        #expect(SenderIdentity.aligned("mail.firm.example", "firm.example"))
+        #expect(SenderIdentity.aligned("firm.example", "news.firm.example"))
+        // A sibling under a public suffix is someone else entirely.
+        #expect(!SenderIdentity.aligned("evil.co.uk", "bank.co.uk"))
+        // A suffix that isn't on a label boundary.
+        #expect(!SenderIdentity.aligned("notfirm.example", "firm.example"))
+        // A bare public suffix can't sign for everything under it.
+        #expect(!SenderIdentity.aligned("example", "firm.example"))
     }
 }

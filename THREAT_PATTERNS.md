@@ -122,6 +122,39 @@ focuses specifically on identity forgery.
   cache: a first-time from-address whose display name matches a sender we normally
   see from a *different* address.
 
+### Trust decisions need a verified From line (2026-11-23)
+
+The From line is written by whoever sends the message, so any rule that trusts
+mail *because of who it says it's from* has to check that the receiving server
+vouched for that address first. Two rules make that kind of decision: the
+Cloud Allowlist and the VIP list.
+
+- **The gap (found in an outside review).** The local scam rule stands aside
+  for list mail, because real lists break DMARC. A forger could put an
+  allowlisted or VIP address in From, add a `List-Id` header, and the message
+  would be (a) sent to the Claude API as mail from a trusted sender and
+  (b) shown in Important Email. Nothing forged was ever *acted on* (actions
+  stay behind confirmations), but forged text reached the prompt.
+- **The rule.** `SenderIdentity` (Mail/AuthenticationResults.swift) reads the
+  trusted stamp only. A message is *verified* when DMARC passed for the From
+  domain (Gmail's `header.from` must match when present), or when DMARC
+  wasn't evaluated and a DKIM signature by the From domain (or a parent or
+  subdomain of it) passed. A trusted `dmarc=fail` is *forged*. Everything
+  else is *unverified*.
+- **Alignment is by whole labels.** `mail.firm.example` aligns with
+  `firm.example`; `evil.co.uk` does not align with `bank.co.uk`. The
+  last-two-labels shortcut used for header forensics is deliberately not used
+  here, because it gets public suffixes wrong.
+- **What each rule does with it.** The Cloud Allowlist gate passes only
+  *verified* mail. The VIP rule promotes only *verified* mail to Important,
+  turns *forged* VIP mail into a scam even when it carries list headers, and
+  leaves *unverified* VIP mail in whatever category the other rules gave it.
+- **Accepted cost.** Allowlisted mail that can't be verified (no trusted
+  stamp, an unknown provider, a list that rewrote the message) now stays on
+  the Mac, and the row shows a crossed-out cloud. That's the same trade the
+  allowlist already makes: a missed task costs less than a forged email in
+  the prompt.
+
 ---
 
 ## Prompt Injection (cloud analysis path)
@@ -344,6 +377,11 @@ Record notable pattern additions/refinements here so the reasoning is traceable.
 - _2026-10-07_ — VIP senders: a LOCAL importance rule. Being a VIP grants no
   cloud eligibility (release-gate tested), and scam detection still wins over
   VIP, so a spoofed "dad@" is flagged rather than promoted.
+- _2026-11-23_ — Trust decisions need a verified From line (outside
+  review). The Cloud Allowlist gate and the VIP rule now also require the
+  receiving server's stamp to vouch for the From domain; a forged VIP with
+  list headers is a scam. See "Trust decisions need a verified From line"
+  under Sender Spoofing Red Flags.
 - _2026-09-27_ — Stage 8 D5: local-only event-hint scan on inbox rows. Local
   body reads widen no cloud boundary; a release-gate test asserts the
   analyzer still sees only allowlisted senders while the scan runs.

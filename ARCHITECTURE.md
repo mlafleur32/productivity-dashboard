@@ -181,6 +181,12 @@ them without explicit instruction in conversation.
    - This gate must sit **in front of** the analysis layer so there is **no code
      path** where a non-allowlisted email reaches the network. Build it before the
      thing it guards.
+   - **The gate asks a second question: is it really them?** (2026-11-23, from
+     an outside review.) The From line is written by whoever sends the mail, so
+     an allowlisted address on its own proves nothing. A message passes only
+     when the receiving server's trusted stamp vouches for its From domain
+     (`SenderIdentity` in Mail/AuthenticationResults.swift; rules in
+     THREAT_PATTERNS.md). Allowlisted mail that can't be verified stays local.
 
 2. **Consequence the user has accepted:** because tasks are extracted by AI
    analysis, tasks are only produced from **allowlisted** senders. Non-allowlisted
@@ -243,6 +249,13 @@ Re-confirm at https://docs.claude.com and https://privacy.claude.com.
   one-click (RFC 8058) is acceptable, each behind explicit confirmation, NEVER
   offered on scam-classified mail. mailto-only senders get handed to Apple Mail
   as a pre-filled draft — the app itself never sends mail (SMTP stays banned).
+- **Trust by sender needs a verified sender (2026-11-23):** the Cloud
+  Allowlist gate and the VIP rule both require the receiving server's stamp to
+  vouch for the From domain. Unverified allowlisted mail stays on the Mac
+  (crossed-out cloud on the row); an unverified VIP isn't promoted to
+  Important; a forged VIP is a scam even with list headers. The cost (some
+  real allowlisted mail, e.g. from lists that break DMARC, isn't analyzed) is
+  accepted for the same reason the allowlist exists.
 - **Cloud "suspicious" verdicts stay hidden (settled 2026-07-05):** deliberately
   excluded from the Scams section (cry-wolf risk). Do not resurface unprompted.
 - (Dropped earlier: a patient-portal login feature was considered and

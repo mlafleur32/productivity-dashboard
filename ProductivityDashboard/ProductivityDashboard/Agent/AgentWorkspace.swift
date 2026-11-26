@@ -60,8 +60,8 @@ final class AgentWorkspace {
         let handle: String
         let message: MailMessage
         let category: MailCategory
-        /// Non-nil only when the message passed the allowlist gate and the
-        /// local rules don't call it a scam. Everything sender-controlled
+        /// Non-nil only when the message passed the allowlist gate (sender
+        /// allowlisted AND verified) and the local rules don't call it a scam. Everything sender-controlled
         /// that reaches the model is rendered from this, never from `message`.
         let eligible: CloudEligibleMessage?
         let verdict: CloudVerdict?
@@ -103,7 +103,10 @@ final class AgentWorkspace {
         // THE GATE, applied once for the whole snapshot. A local scam
         // verdict keeps a message out even when its From address is
         // allowlisted: a trusted dmarc=fail means the address is forged, so
-        // the allowlist entry says nothing about who really wrote it.
+        // the allowlist entry says nothing about who really wrote it. Since
+        // 2026-11-23 the gate itself also requires a verified sender, which
+        // covers the case the scam rule stands aside for (a forged From with
+        // a List-Id header). This filter stays as a second, local check.
         let candidates = recent.filter { $0.category != .scam }.map(\.message)
         var eligibleByID: [String: CloudEligibleMessage] = [:]
         for eligible in CloudAllowlist.filter(candidates, using: context.allowlist) {
@@ -259,7 +262,7 @@ final class AgentWorkspace {
         }
         guard let eligible = row.eligible else {
             return Outcome(
-                content: "Refused: this sender is not on the user's Cloud Allowlist, so the message stays on the Mac. You may still propose actions for it by handle.",
+                content: "Refused: this message is not cleared for the cloud (its sender is not on the user's Cloud Allowlist, or the app could not confirm it really came from that sender), so it stays on the Mac. You may still propose actions for it by handle.",
                 isError: true, event: .refusedBody(handle: handle, why: .notAllowlisted))
         }
         guard bodyReads < limits.maxBodyReads else {
